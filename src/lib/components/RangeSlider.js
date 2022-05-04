@@ -18,13 +18,14 @@ const _dataUpper = 'data-upper'
 const _dataFocused = 'data-focused'
 const _dataDisabled = 'data-disabled'
 
+const _current = 'current'
 const _document = document
 const _parseFloat = parseFloat
 const _mathAbsolute = Math.abs
-const _getComputedStyle = window.getComputedStyle
 const _setAttribute = 'setAttribute'
 const _removeAttribute = 'removeAttribute'
 const _addEventListener = 'addEventListener'
+const _getComputedStyle = window.getComputedStyle
 
 const _listenerOptions = { passive: false, capture: true }
 
@@ -68,23 +69,23 @@ class RangeSlider extends React.PureComponent {
       this.resetSliders()
 
       // Add listeners to element
-      this.element.current[_addEventListener]('pointerdown', e => { this.elementFocused(e) }, _listenerOptions)
+      this.element[_current][_addEventListener]('pointerdown', e => { this.elementFocused(e) }, _listenerOptions)
 
       // Add listeners to <thumb>s and set [data-disabled] on disabled <thumb>s
       this.thumb.forEach((t, i) => {
-        t.current[_addEventListener]('pointerdown', e => { this.initiateThumbDrag(e, i, t.current) }, _listenerOptions)
+        t[_current][_addEventListener]('pointerdown', e => { this.initiateThumbDrag(e, i, t[_current]) }, _listenerOptions)
       })
 
       // Add listeners to <range>
-      this.range.current[_addEventListener]('pointerdown', e => { this.initiateRangeDrag(e) }, _listenerOptions)
+      this.range[_current][_addEventListener]('pointerdown', e => { this.initiateRangeDrag(e) }, _listenerOptions)
 
       // Add global listeners
       _document[_addEventListener]('pointermove', e => { this.drag(e) }, _listenerOptions)
       _document[_addEventListener]('pointerup', () => {
         if (this.isDragging) {
-          this.thumb[0].current[_removeAttribute](_dataFocused)
-          this.thumb[1].current[_removeAttribute](_dataFocused)
-          this.range.current[_removeAttribute](_dataFocused)
+          this.thumb[0][_current][_removeAttribute](_dataFocused)
+          this.thumb[1][_current][_removeAttribute](_dataFocused)
+          this.range[_current][_removeAttribute](_dataFocused)
           this.isDragging = false
         }
       }, _listenerOptions)
@@ -116,9 +117,9 @@ class RangeSlider extends React.PureComponent {
     this.updateRangeLimits()
 
     this.thumb.forEach((t, i) => {
-      if (this.options[_thumbsDisabled][i === 1 ? this.index[_max] : this.index[_min]]) { t.current[_setAttribute](_dataDisabled, '') } else { t.current[_removeAttribute](_dataDisabled) }
+      if (this.options[_thumbsDisabled][i === 1 ? this.index[_max] : this.index[_min]]) { t[_current][_setAttribute](_dataDisabled, '') } else { t[_current][_removeAttribute](_dataDisabled) }
     })
-    if (this.options[_disabled]) { this.element.current[_setAttribute](_dataDisabled, '') } else { this.element.current[_removeAttribute](_dataDisabled) }
+    if (this.options[_disabled]) { this.element[_current][_setAttribute](_dataDisabled, '') } else { this.element[_current][_removeAttribute](_dataDisabled) }
   }
 
   isNumber (n) {
@@ -156,33 +157,33 @@ class RangeSlider extends React.PureComponent {
 
   setValue (val, forceSet = false, callback = true) {
     const currentValue = {
-      min: this.input[this.index[_min]].current[_value],
-      max: this.input[this.index[_max]].current[_value]
+      min: this.input[this.index[_min]][_current][_value],
+      max: this.input[this.index[_max]][_current][_value]
     }
 
     val = val || currentValue
 
     this.sliderValue = val
-    this.input[this.index[_min]].current[_value] = val[_min]
-    this.input[this.index[_max]].current[_value] = (this.thumbDrag || forceSet) ? val[_max] : (val[_min] + this.rangeWidth)
-    this.value[_min] = +this.input[this.index[_min]].current[_value]
-    this.value[_max] = +this.input[this.index[_max]].current[_value]
+    this.input[this.index[_min]][_current][_value] = val[_min]
+    this.input[this.index[_max]][_current][_value] = (this.thumbDrag || forceSet) ? val[_max] : (val[_min] + this.rangeWidth)
+    this.value[_min] = +this.input[this.index[_min]][_current][_value]
+    this.value[_max] = +this.input[this.index[_max]][_current][_value]
 
     if (forceSet) {
       // Check if the values are correctly set
       if (this.value[_min] > this.value[_max]) {
         this.switchIndex()
-        this.value[_min] = +this.input[this.index[_min]].current[_value]
-        this.value[_max] = +this.input[this.index[_max]].current[_value]
+        this.value[_min] = +this.input[this.index[_min]][_current][_value]
+        this.value[_max] = +this.input[this.index[_max]][_current][_value]
       }
       this.sliderValue = this.value
     }
 
     let valueSet = false
 
-    if (currentValue[_min] !== this.input[this.index[_min]].current[_value] || forceSet) { valueSet = true }
+    if (currentValue[_min] !== this.input[this.index[_min]][_current][_value] || forceSet) { valueSet = true }
 
-    if (currentValue[_max] !== this.input[this.index[_max]].current[_value] || forceSet) { valueSet = true }
+    if (currentValue[_max] !== this.input[this.index[_max]][_current][_value] || forceSet) { valueSet = true }
 
     // Update the <thumb>s and <range> positions and widths everytime a value is set
     if (valueSet) {
@@ -196,10 +197,10 @@ class RangeSlider extends React.PureComponent {
   switchIndex () {
     this.index[_min] = +!this.index[_min]
     this.index[_max] = +!this.index[_max]
-    this.thumb[this.index[_min]].current[_removeAttribute](_dataUpper)
-    this.thumb[this.index[_max]].current[_removeAttribute](_dataLower)
-    this.thumb[this.index[_min]].current[_setAttribute](_dataLower, '')
-    this.thumb[this.index[_max]].current[_setAttribute](_dataUpper, '')
+    this.thumb[this.index[_min]][_current][_removeAttribute](_dataUpper)
+    this.thumb[this.index[_max]][_current][_removeAttribute](_dataLower)
+    this.thumb[this.index[_min]][_current][_setAttribute](_dataLower, '')
+    this.thumb[this.index[_max]][_current][_setAttribute](_dataUpper, '')
     if (this.thumbDrag) { this.thumbDrag = this.thumbDrag === _min ? _max : _min }
   }
 
@@ -207,14 +208,14 @@ class RangeSlider extends React.PureComponent {
     let indexSwitched = false
 
     if (this.thumbIndex === this.index[_min]) {
-      if (this.input[this.thumbIndex].current[_value] > this.value[_max]) {
+      if (this.input[this.thumbIndex][_current][_value] > this.value[_max]) {
         this.switchIndex()
         indexSwitched = true
       }
     }
 
     if (this.thumbIndex === this.index[_max]) {
-      if (this.input[this.thumbIndex].current[_value] < this.value[_min]) {
+      if (this.input[this.thumbIndex][_current][_value] < this.value[_min]) {
         this.switchIndex()
         indexSwitched = true
       }
@@ -224,15 +225,15 @@ class RangeSlider extends React.PureComponent {
   }
 
   updateThumbs () {
-    this.thumb[this.index[_min]].current.style.left = `calc(${((this.value[_min] - this.options[_min]) / this.maxWidth) * 100}% + ${(0.5 - ((this.value[_min] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_min]}px)`
-    this.thumb[this.index[_max]].current.style.left = `calc(${((this.value[_max] - this.options[_min]) / this.maxWidth) * 100}% + ${(0.5 - ((this.value[_max] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_max]}px)`
+    this.thumb[this.index[_min]][_current].style.left = `calc(${((this.value[_min] - this.options[_min]) / this.maxWidth) * 100}% + ${(0.5 - ((this.value[_min] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_min]}px)`
+    this.thumb[this.index[_max]][_current].style.left = `calc(${((this.value[_max] - this.options[_min]) / this.maxWidth) * 100}% + ${(0.5 - ((this.value[_max] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_max]}px)`
   }
 
   updateRange () {
-    const deltaLeft = ((0.5 - ((this.value[_min] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_min]) / this.element.current.clientWidth
-    const deltaWidth = ((0.5 - ((this.value[_max] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_max]) / this.element.current.clientWidth
-    this.range.current.style.left = `${(((this.value[_min] - this.options[_min]) / this.maxWidth) + deltaLeft) * 100}%`
-    this.range.current.style.width = `${(((this.value[_max] - this.options[_min]) / this.maxWidth) - ((this.value[_min] - this.options[_min]) / this.maxWidth) - deltaLeft + deltaWidth) * 100}%`
+    const deltaLeft = ((0.5 - ((this.value[_min] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_min]) / this.element[_current].clientWidth
+    const deltaWidth = ((0.5 - ((this.value[_max] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_max]) / this.element[_current].clientWidth
+    this.range[_current].style.left = `${(((this.value[_min] - this.options[_min]) / this.maxWidth) + deltaLeft) * 100}%`
+    this.range[_current].style.width = `${(((this.value[_max] - this.options[_min]) / this.maxWidth) - ((this.value[_min] - this.options[_min]) / this.maxWidth) - deltaLeft + deltaWidth) * 100}%`
   }
 
   updateRangeLimits () {
@@ -242,12 +243,12 @@ class RangeSlider extends React.PureComponent {
 
   // <thumb> width value is to be synced with CSS for correct calculation of <range> width and position
   syncThumbWidth () {
-    this.thumbWidth[_min] = _parseFloat(_getComputedStyle(this.thumb[this.index[_min]].current).width)
-    this.thumbWidth[_max] = _parseFloat(_getComputedStyle(this.thumb[this.index[_max]].current).width)
+    this.thumbWidth[_min] = _parseFloat(_getComputedStyle(this.thumb[this.index[_min]][_current]).width)
+    this.thumbWidth[_max] = _parseFloat(_getComputedStyle(this.thumb[this.index[_max]][_current]).width)
   }
 
   currentPosition (e, node) {
-    return ((node.offsetLeft + (e[`client${this.options[_orientation] === 'vertical' ? 'Y' : 'X'}`] - node.getBoundingClientRect()[this.options[_orientation] === 'vertical' ? 'top' : 'left']) - (this.thumbDrag ? ((0.5 - (this.value[this.thumbDrag] - this.options[_min]) / this.maxWidth) * this.thumbWidth[this.thumbDrag]) : 0)) / this.element.current.clientWidth) * this.maxWidth + this.options[_min]
+    return ((node.offsetLeft + (e[`client${this.options[_orientation] === 'vertical' ? 'Y' : 'X'}`] - node.getBoundingClientRect()[this.options[_orientation] === 'vertical' ? 'top' : 'left']) - (this.thumbDrag ? ((0.5 - (this.value[this.thumbDrag] - this.options[_min]) / this.maxWidth) * this.thumbWidth[this.thumbDrag]) : 0)) / this.element[_current].clientWidth) * this.maxWidth + this.options[_min]
   }
 
   eventElementTagName (e) {
@@ -264,7 +265,7 @@ class RangeSlider extends React.PureComponent {
     }
 
     if (setFocus) {
-      let currPos = this.currentPosition(e, this.range.current)
+      let currPos = this.currentPosition(e, this.range[_current])
       if (currPos < 0) { currPos = 0 }
       const deltaMin = _mathAbsolute(this.value[_min] - currPos)
       const deltaMax = _mathAbsolute(this.value[_max] - currPos)
@@ -272,12 +273,12 @@ class RangeSlider extends React.PureComponent {
       if (this.options[_thumbsDisabled][0]) {
         if (currPos >= this.value[_min]) {
           this.setValue({ min: this.value[_min], max: currPos }, true)
-          this.initiateThumbDrag(e, this.index[_max], this.thumb[this.index[_max]].current)
+          this.initiateThumbDrag(e, this.index[_max], this.thumb[this.index[_max]][_current])
         }
       } else if (this.options[_thumbsDisabled][1]) {
         if (currPos <= this.value[_max]) {
           this.setValue({ min: currPos, max: this.value[_max] }, true)
-          this.initiateThumbDrag(e, this.index[_min], this.thumb[this.index[_min]].current)
+          this.initiateThumbDrag(e, this.index[_min], this.thumb[this.index[_min]][_current])
         }
       } else {
         let nearestThumbIndex = 1
@@ -285,7 +286,7 @@ class RangeSlider extends React.PureComponent {
           this.setValue({ min: deltaMin < deltaMax ? currPos : this.value[_min], max: deltaMax < deltaMin ? currPos : this.value[_max] }, true)
           nearestThumbIndex = deltaMin < deltaMax ? this.index[_min] : this.index[_max]
         }
-        this.initiateThumbDrag(e, nearestThumbIndex, this.thumb[nearestThumbIndex].current)
+        this.initiateThumbDrag(e, nearestThumbIndex, this.thumb[nearestThumbIndex][_current])
       }
     }
   }
@@ -297,7 +298,7 @@ class RangeSlider extends React.PureComponent {
       this.thumbDrag = this.index[_min] === i ? _min : _max
       this.thumbIndex = i
       this.isDragging = true
-      this.thumb[i].current[_setAttribute](_dataFocused, '')
+      this.thumb[i][_current][_setAttribute](_dataFocused, '')
     }
   }
 
@@ -305,10 +306,10 @@ class RangeSlider extends React.PureComponent {
     if (!this.options[_disabled] && !this.options[_rangeSlideDisabled]) {
       this.syncThumbWidth()
       this.rangeWidth = this.value[_max] - this.value[_min]
-      this.startPos = this.currentPosition(e, this.range.current)
+      this.startPos = this.currentPosition(e, this.range[_current])
       this.thumbDrag = false
       this.isDragging = true
-      this.range.current[_setAttribute](_dataFocused, '')
+      this.range[_current][_setAttribute](_dataFocused, '')
     }
   }
 
@@ -319,7 +320,7 @@ class RangeSlider extends React.PureComponent {
 
   drag (e) {
     if (this.isDragging) {
-      const lastPos = this.currentPosition(e, this.range.current)
+      const lastPos = this.currentPosition(e, this.range[_current])
       const delta = lastPos - this.startPos
 
       let min = this.value[_min]
