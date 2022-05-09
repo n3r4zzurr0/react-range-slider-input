@@ -51,5 +51,8 @@
     "react-dom": "^18.1.0",
     "react-scripts": "5.0.1",
     "standard": "^17.0.0"
+  },
+  "dependencies": {
+    "clsx": "^1.1.1"
   }
 }
