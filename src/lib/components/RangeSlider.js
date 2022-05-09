@@ -367,7 +367,7 @@ class RangeSlider extends React.PureComponent {
   }
 
   setDefaultIfNotSet (property, defaultValue) {
-    this.options[property] = Object.prototype.hasOwnProperty.call(this.props, property) ? this.props[property] : defaultValue
+    this.options[property] = {}.hasOwnProperty.call(this.props, property) ? this.props[property] : defaultValue
   }
 
   render () {
