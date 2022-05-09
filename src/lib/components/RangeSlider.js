@@ -1,4 +1,5 @@
-import React from 'react'
+import { PureComponent, createRef } from 'react'
+import clsx from 'clsx'
 import './index.css'
 
 // Options
@@ -29,14 +30,14 @@ const _getComputedStyle = window.getComputedStyle
 
 const _listenerOptions = { passive: false, capture: true }
 
-class RangeSlider extends React.PureComponent {
+class RangeSlider extends PureComponent {
   constructor () {
     super()
 
-    this.element = React.createRef()
-    this.input = [React.createRef(), React.createRef()]
-    this.thumb = [React.createRef(), React.createRef()]
-    this.range = React.createRef()
+    this.element = createRef()
+    this.input = [createRef(), createRef()]
+    this.thumb = [createRef(), createRef()]
+    this.range = createRef()
 
     this.isComponentMounted = false
     this.options = {}
@@ -385,7 +386,7 @@ class RangeSlider extends React.PureComponent {
     this.safeThumbsDisabledValues()
 
     return (
-      <div id={this.props.id} ref={this.element} className='range-slider'>
+      <div id={this.props.id} ref={this.element} className={clsx('range-slider', this.props.className)}>
         <input ref={this.input[0]} type='range' min={this.options[_min]} max={this.options[_max]} step={this.options[_step]} value={this.value[_min] === -1 ? this.options[_value][0] : this.value[_min]} onChange={() => {}} />
         <input ref={this.input[1]} type='range' min={this.options[_min]} max={this.options[_max]} step={this.options[_step]} value={this.value[_max] === -1 ? this.options[_value][1] : this.value[_max]} onChange={() => {}} />
         <thumb ref={this.thumb[0]} is='custom' data-lower />

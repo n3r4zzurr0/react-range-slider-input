@@ -34,6 +34,7 @@ class Example extends React.PureComponent {
         <button onClick={() => { this.updateProperty('rangeSlideDisabled', !this.state.rangeSlideDisabled) }}>toggle rangeSlideDisabled</button>
         <RangeSlider
           id='range-slider-1'
+          className='test-class-name test-class-2'
           {...this.state}
         />
       </div>
