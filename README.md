@@ -8,7 +8,9 @@
 # react-range-slider-input
 [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![javascript style guide][standard-image]][standard-url]
 
-React component for [range-slider-input](https://www.npmjs.com/package/range-slider-input).
+React component wrapper for [range-slider-input](https://www.npmjs.com/package/range-slider-input).
+
+**[CodeSanbox Demo](https://codesandbox.io/s/react-range-slider-input-demo-ymw2kp?file=/src/App.js)**
 
 ## Installation
 ```
