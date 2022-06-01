@@ -127,7 +127,7 @@ export default App;
 
 ## Elements
 
-Refer to [range-slider-input's Elements section](https://github.com/n3r4zzurr0/range-slider-input#styling)
+Refer to [range-slider-input's Elements section](https://github.com/n3r4zzurr0/range-slider-input#elements)
 
 
 ## Styling
