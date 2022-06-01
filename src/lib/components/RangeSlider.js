@@ -112,7 +112,7 @@ class RangeSlider extends PureComponent {
     this.updateDisabledState()
     this.updateThumbsDisabledState()
     this.updateTabIndexes()
-    this.isControlled = this.props.value ? true : false
+    this.isControlled = !!this.props.value
   }
 
   isNumber (n) {
@@ -498,8 +498,7 @@ class RangeSlider extends PureComponent {
     this.fallbackToDefault('step', 1)
     this.fallbackToDefault('min', 0)
     this.fallbackToDefault('max', 100)
-    if(this.props.value)
-      this.fallbackToDefault('value', [25, 75])
+    if (this.props.value) { this.fallbackToDefault('value', [25, 75]) }
 
     this.safeMinMaxValues()
     this.safeThumbsDisabledValues()
