@@ -504,7 +504,7 @@ class RangeSlider extends PureComponent {
     this.safeThumbsDisabledValues()
 
     return (
-      <div id={this.props.id} ref={this.element} className={clsx('range-slider', this.props.className)}>
+      <div data-testid="element" id={this.props.id} ref={this.element} className={clsx('range-slider', this.props.className)}>
         <input ref={this.input[0]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[0] : (this.isComponentMounted ? this.value.min : this.options.defaultValue[0])} onChange={() => {}} disabled />
         <input ref={this.input[1]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[1] : (this.isComponentMounted ? this.value.max : this.options.defaultValue[1])} onChange={() => {}} disabled />
         <div ref={this.thumb[0]} role='slider' className='range-slider__thumb' data-lower />
