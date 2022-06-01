@@ -2,33 +2,24 @@ import React, { PureComponent, createRef } from 'react'
 import clsx from 'clsx'
 import './index.css'
 
-// Options
-const _min = 'min'
-const _max = 'max'
-const _step = 'step'
-const _value = 'value'
-const _onInput = 'onInput'
-const _disabled = 'disabled'
-const _orientation = 'orientation'
-const _thumbsDisabled = 'thumbsDisabled'
-const _rangeSlideDisabled = 'rangeSlideDisabled'
+// Aliases
+const abs = Math.abs
+const float = parseFloat
+const style = window.getComputedStyle
+
+// Values
+const MIN = 'min'
+const MAX = 'max'
+const ANY = 'any'
+const VERTICAL = 'vertical'
+const TABINDEX = 'tabindex'
 
 // Data Attributes
-const _dataLower = 'data-lower'
-const _dataUpper = 'data-upper'
-const _dataFocused = 'data-focused'
-const _dataDisabled = 'data-disabled'
-
-const _current = 'current'
-const _document = document
-const _parseFloat = parseFloat
-const _mathAbsolute = Math.abs
-const _setAttribute = 'setAttribute'
-const _removeAttribute = 'removeAttribute'
-const _addEventListener = 'addEventListener'
-const _getComputedStyle = window.getComputedStyle
-
-const _listenerOptions = { passive: false, capture: true }
+const DATA_LOWER = 'data-lower'
+const DATA_UPPER = 'data-upper'
+const DATA_ACTIVE = 'data-active'
+const DATA_VERTICAL = 'data-vertical'
+const DATA_DISABLED = 'data-disabled'
 
 class RangeSlider extends PureComponent {
   constructor () {
@@ -39,359 +30,487 @@ class RangeSlider extends PureComponent {
     this.thumb = [createRef(), createRef()]
     this.range = createRef()
 
-    this.isComponentMounted = false
     this.options = {}
-    this.value = { min: -1, max: -1 }
+    this.isControlled = false
+    this.isComponentMounted = false
   }
 
   componentDidMount () {
     if (!this.isComponentMounted) {
-      // Thumb indexes for min and max values
-      this.index = { min: 0, max: 1 }
-      // Thumb width for calculation of exact positions and sizes of <thumb>s and <range>
-      this.thumbWidth = { min: 0, max: 0 }
-      // Slider value depending on the user interaction
-      this.sliderValue = { min: 0, max: 0 }
-      // Slidable range limits (active when a <thumb> is disabled)
-      this.rangeLimits = { min: 0, max: 0 }
+      this.value = this.setMinMaxProps()
 
-      // For dragging <thumb>s and <range>
-      this.maxWidth = 0
+      // Thumb indexes for min and max values
+      // (swapped when the thumbs cross each other)
+      this.index = this.setMinMaxProps(0, 1)
+
+      // Thumb width & height for calculation of exact positions and sizes of horizontal thumbs and range
+      this.thumbWidth = this.setMinMaxProps()
+      this.thumbHeight = this.setMinMaxProps()
+
+      // Slidable range limits (when a thumb is dragged)
+      this.rangeLimits = this.setMinMaxProps()
+
+      // Slider value depending on the user interaction
+      this.sliderValue = this.setMinMaxProps()
+
+      // For dragging thumbs and range
+      this.maxRangeWidth = 0
       this.rangeWidth = 0
       this.isDragging = false
       this.thumbDrag = false
-      this.thumbIndex = 0
       this.startPos = 0
 
-      // To check if extreme values have been set
-      this.maxSet = false
-      this.minSet = false
-
-      this.resetSliders()
+      // initial
+      this.reset()
 
       // Add listeners to element
-      this.element[_current][_addEventListener]('pointerdown', e => { this.elementFocused(e) }, _listenerOptions)
+      this.addNodeEventListener(this.element.current, 'pointerdown', e => { this.elementFocused(e) })
 
-      // Add listeners to <thumb>s and set [data-disabled] on disabled <thumb>s
+      // Add listeners to thumbs and set [data-disabled] on disabled thumbs
       this.thumb.forEach((t, i) => {
-        t[_current][_addEventListener]('pointerdown', e => { this.initiateThumbDrag(e, i, t[_current]) }, _listenerOptions)
+        this.addNodeEventListener(t.current, 'pointerdown', e => { this.initiateThumbDrag(e, i, t.current) })
+        this.addNodeEventListener(t.current, 'keydown', e => {
+          if (e.which >= 37 && e.which <= 40) {
+            e.preventDefault()
+            this.stepValue(i, e.which)
+          }
+        })
       })
 
-      // Add listeners to <range>
-      this.range[_current][_addEventListener]('pointerdown', e => { this.initiateRangeDrag(e) }, _listenerOptions)
+      // Add listeners to range
+      this.addNodeEventListener(this.range.current, 'pointerdown', e => { this.initiateRangeDrag(e) })
 
       // Add global listeners
-      _document[_addEventListener]('pointermove', e => { this.drag(e) }, _listenerOptions)
-      _document[_addEventListener]('pointerup', () => {
+      this.addNodeEventListener(document, 'pointermove', e => { this.drag(e) })
+      this.addNodeEventListener(document, 'pointerup', () => {
         if (this.isDragging) {
-          this.thumb[0][_current][_removeAttribute](_dataFocused)
-          this.thumb[1][_current][_removeAttribute](_dataFocused)
-          this.range[_current][_removeAttribute](_dataFocused)
+          this.removeNodeAttribute(this.thumb[0].current, DATA_ACTIVE)
+          this.removeNodeAttribute(this.thumb[1].current, DATA_ACTIVE)
+          this.removeNodeAttribute(this.range.current, DATA_ACTIVE)
           this.isDragging = false
         }
-      }, _listenerOptions)
-      window[_addEventListener]('resize', () => {
-        this.syncThumbWidth()
+      })
+      this.addNodeEventListener(window, 'resize', () => {
+        this.syncThumbDimensions()
         this.updateThumbs()
         this.updateRange()
       })
 
-      this.lastPropsValue = this.options[_value]
       this.isComponentMounted = true
     }
   }
 
   componentDidUpdate () {
-    let val = false
-    if (!this.areArraysSame(this.options[_value], this.lastPropsValue)) {
-      val = this.options[_value]
-      this.lastPropsValue = val
-    }
-    this.resetSliders(val ? { min: val[0], max: val[1] } : '')
+    this.reset()
   }
 
-  resetSliders (val = '') {
-    this.maxWidth = this.options[_max] - this.options[_min]
-    if (this.maxWidth === 0) { this.maxWidth = 1 }
-    this.syncThumbWidth()
-    this.setValue(val, true, false)
+  reset () {
+    this.maxRangeWidth = this.options.max - this.options.min
+    this.updateOrientation()
+    this.setValue('', true, false)
     this.updateRangeLimits()
-
-    this.thumb.forEach((t, i) => {
-      if (this.options[_thumbsDisabled][i === 1 ? this.index[_max] : this.index[_min]]) { t[_current][_setAttribute](_dataDisabled, '') } else { t[_current][_removeAttribute](_dataDisabled) }
-    })
-    if (this.options[_disabled]) { this.element[_current][_setAttribute](_dataDisabled, '') } else { this.element[_current][_removeAttribute](_dataDisabled) }
+    this.updateDisabledState()
+    this.updateThumbsDisabledState()
+    this.updateTabIndexes()
+    this.isControlled = this.props.value ? true : false
   }
 
   isNumber (n) {
-    return +n + '' === n + ''
+    // check for NaN explicitly
+    // because with NaN, the second exp. evaluates to true
+    return !isNaN(n) && +n + '' === n + ''
   }
 
-  areArraysSame (a1, a2) {
-    let i = a1.length
-    while (i--) {
-      if (a1[i] !== a2[i]) { return false }
-    }
-    return true
+  setMinMaxProps (min = 0, max = 0) {
+    return { min, max }
   }
 
-  // Set min and max values to 1 if any of the min or max values are "invalid"
+  iterateMinMaxProps (fn) {
+    [MIN, MAX].forEach(fn)
+  }
+
+  getSetProps (condition, expression, fn) {
+    if (condition) { return expression } else { fn() }
+  }
+
+  setNodeAttribute (node, attribute, value = '') {
+    node.setAttribute(attribute, value)
+  }
+
+  removeNodeAttribute (node, attribute) {
+    node.removeAttribute(attribute)
+  }
+
+  addNodeEventListener (node, event, fn, isPointerEvent = true) {
+    // with options for pointer events
+    node.addEventListener(event, fn, isPointerEvent ? { passive: false, capture: true } : {})
+  }
+
+  fallbackToDefault (property, defaultValue) {
+    this.options[property] = this.props[property] ? this.props[property] : defaultValue
+  }
+
+  ifVerticalElse (vertical, horizontal) {
+    return this.options.orientation === VERTICAL ? vertical : horizontal
+  }
+
+  currentIndex (i) {
+    return i === 1 ? this.index.max : this.index.min
+  }
+
+  // Set min and max values to 1 (arbitrarily) if any of the min or max values are "invalid"
   // Setting both values 1 will disable the slider
+  // Called when,
+  // -> the element is initially set
+  // -> min or max properties are modified
   safeMinMaxValues () {
     let error = false
-    if (!this.isNumber(this.options[_min]) || !this.isNumber(this.options[_max])) { error = true }
-    this.options[_min] = error ? 1 : +this.options[_min]
-    this.options[_max] = error ? 1 : +this.options[_max]
+    if (!this.isNumber(this.options.min) || !this.isNumber(this.options.max)) { error = true }
+    this.options.min = error ? 1 : +this.options.min
+    this.options.max = error ? 1 : +this.options.max
   }
 
   // Reframe the thumbsDisabled value if "invalid"
+  // Called when,
+  // -> the element is initially set
+  // -> thumbsDisabled property is modified
   safeThumbsDisabledValues () {
-    if (this.options[_thumbsDisabled] instanceof Array) {
-      if (this.options[_thumbsDisabled].length === 1) { this.options[_thumbsDisabled].push(false) }
-      if (this.options[_thumbsDisabled].length !== 1 && this.options[_thumbsDisabled].length !== 2) { this.options[_thumbsDisabled] = [false, false] }
-    } else { this.options[_thumbsDisabled] = [this.options[_thumbsDisabled], this.options[_thumbsDisabled]] }
+    if (this.options.thumbsDisabled instanceof Array) {
+      if (this.options.thumbsDisabled.length === 1) { this.options.thumbsDisabled.push(false) }
+      if (this.options.thumbsDisabled.length !== 1 && this.options.thumbsDisabled.length !== 2) { this.options.thumbsDisabled = [false, false] }
+    } else { this.options.thumbsDisabled = [this.options.thumbsDisabled, this.options.thumbsDisabled] }
 
     // Boolean Values
-    this.options[_thumbsDisabled][0] = !!this.options[_thumbsDisabled][0]
-    this.options[_thumbsDisabled][1] = !!this.options[_thumbsDisabled][1]
+    this.options.thumbsDisabled[0] = !!this.options.thumbsDisabled[0]
+    this.options.thumbsDisabled[1] = !!this.options.thumbsDisabled[1]
   }
 
-  setValue (val, forceSet = false, callback = true) {
-    const currentValue = {
-      min: this.input[this.index[_min]][_current][_value],
-      max: this.input[this.index[_max]][_current][_value]
+  // Called when,
+  // -> the element is initially set
+  // -> min, max, step or value properties are modified
+  // -> thumbs are dragged
+  // -> element is clicked upon
+  // -> an arrow key is pressed
+  setValue (newValue, forceSet = false, callback = true) {
+    // Current value as set in the input elements
+    // which could change while changing min, max and step values
+    const currentValue = this.setMinMaxProps(this.input[this.index.min].current.value, this.input[this.index.max].current.value)
+
+    // var value is synced with the values set in the input elements if no newValue is passed
+    newValue = newValue || currentValue
+
+    this.input[this.index.min].current.value = newValue.min
+    this.input[this.index.max].current.value = (this.thumbDrag || forceSet) ? newValue.max : (newValue.min + this.rangeWidth)
+    this.syncValues()
+
+    // Check if the thumbs cross each other
+    if (this.value.min > this.value.max) {
+      // Switch thumb indexes
+      this.index.min = +!this.index.min
+      this.index.max = +!this.index.max
+
+      // Switch thumb attributes
+      this.removeNodeAttribute(this.thumb[this.index.min].current, DATA_UPPER)
+      this.removeNodeAttribute(this.thumb[this.index.max].current, DATA_LOWER)
+      this.setNodeAttribute(this.thumb[this.index.min].current, DATA_LOWER)
+      this.setNodeAttribute(this.thumb[this.index.max].current, DATA_UPPER)
+
+      // Switch thumb drag labels
+      if (this.thumbDrag) { this.thumbDrag = this.thumbDrag === MIN ? MAX : MIN }
+
+      this.syncValues()
     }
 
-    val = val || currentValue
-
-    this.sliderValue = val
-    this.input[this.index[_min]][_current][_value] = val[_min]
-    this.input[this.index[_max]][_current][_value] = (this.thumbDrag || forceSet) ? val[_max] : (val[_min] + this.rangeWidth)
-    this.value[_min] = +this.input[this.index[_min]][_current][_value]
-    this.value[_max] = +this.input[this.index[_max]][_current][_value]
-
-    if (forceSet) {
-      // Check if the values are correctly set
-      if (this.value[_min] > this.value[_max]) {
-        this.switchIndex()
-        this.value[_min] = +this.input[this.index[_min]][_current][_value]
-        this.value[_max] = +this.input[this.index[_max]][_current][_value]
-      }
-      this.sliderValue = this.value
-    }
+    this.sliderValue = forceSet ? this.value : newValue
 
     let valueSet = false
 
-    if (currentValue[_min] !== this.input[this.index[_min]][_current][_value] || forceSet) { valueSet = true }
+    if (currentValue.min !== this.input[this.index.min].current.value || forceSet) { valueSet = true }
 
-    if (currentValue[_max] !== this.input[this.index[_max]][_current][_value] || forceSet) { valueSet = true }
+    if (currentValue.max !== this.input[this.index.max].current.value || forceSet) { valueSet = true }
 
-    // Update the <thumb>s and <range> positions and widths everytime a value is set
+    // Update the positions, dimensions and aria attributes everytime a value is set
+    // and call the onInput function from options (if set)
     if (valueSet) {
-      if (callback && this.options[_onInput]) { this.options[_onInput]([this.value[_min], this.value[_max]]) }
+      if (callback && this.options.onInput) { this.options.onInput([this.value.min, this.value.max]) }
+      this.syncThumbDimensions()
       this.updateThumbs()
       this.updateRange()
+      this.updateAriaValueAttributes()
     }
   }
 
-  // Switch <thumb> indexes whenever lower and upper <thumb>s switch positions
-  switchIndex () {
-    this.index[_min] = +!this.index[_min]
-    this.index[_max] = +!this.index[_max]
-    this.thumb[this.index[_min]][_current][_removeAttribute](_dataUpper)
-    this.thumb[this.index[_max]][_current][_removeAttribute](_dataLower)
-    this.thumb[this.index[_min]][_current][_setAttribute](_dataLower, '')
-    this.thumb[this.index[_max]][_current][_setAttribute](_dataUpper, '')
-    if (this.thumbDrag) { this.thumbDrag = this.thumbDrag === _min ? _max : _min }
+  // Sync var value with the input elements
+  syncValues () {
+    this.iterateMinMaxProps(_ => {
+      this.value[_] = +this.input[this.index[_]].current.value
+    })
   }
 
-  updateInputState () {
-    let indexSwitched = false
-
-    if (this.thumbIndex === this.index[_min]) {
-      if (this.input[this.thumbIndex][_current][_value] > this.value[_max]) {
-        this.switchIndex()
-        indexSwitched = true
-      }
-    }
-
-    if (this.thumbIndex === this.index[_max]) {
-      if (this.input[this.thumbIndex][_current][_value] < this.value[_min]) {
-        this.switchIndex()
-        indexSwitched = true
-      }
-    }
-
-    if (indexSwitched) { this.setValue('', true) }
-  }
-
+  // Called when,
+  // -> setValue is called and a value is set
+  // -> window is resized
   updateThumbs () {
-    this.thumb[this.index[_min]][_current].style.left = `calc(${((this.value[_min] - this.options[_min]) / this.maxWidth) * 100}% + ${(0.5 - ((this.value[_min] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_min]}px)`
-    this.thumb[this.index[_max]][_current].style.left = `calc(${((this.value[_max] - this.options[_min]) / this.maxWidth) * 100}% + ${(0.5 - ((this.value[_max] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_max]}px)`
+    this.iterateMinMaxProps(_ => {
+      this.thumb[this.index[_]].current.style[this.ifVerticalElse('top', 'left')] = `calc(${((this.value[_] - this.options.min) / this.maxRangeWidth) * 100}% + ${(0.5 - ((this.value[_] - this.options.min) / this.maxRangeWidth)) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth)[_]}px)`
+    })
   }
 
+  // Called when,
+  // -> setValue is called and a value is set
+  // -> window is resized
   updateRange () {
-    const deltaLeft = ((0.5 - ((this.value[_min] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_min]) / this.element[_current].clientWidth
-    const deltaWidth = ((0.5 - ((this.value[_max] - this.options[_min]) / this.maxWidth)) * this.thumbWidth[_max]) / this.element[_current].clientWidth
-    this.range[_current].style.left = `${(((this.value[_min] - this.options[_min]) / this.maxWidth) + deltaLeft) * 100}%`
-    this.range[_current].style.width = `${(((this.value[_max] - this.options[_min]) / this.maxWidth) - ((this.value[_min] - this.options[_min]) / this.maxWidth) - deltaLeft + deltaWidth) * 100}%`
+    const deltaOffset = ((0.5 - ((this.value.min - this.options.min) / this.maxRangeWidth)) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth).min) / this.element.current[`client${this.ifVerticalElse('Height', 'Width')}`]
+    const deltaDimension = ((0.5 - ((this.value.max - this.options.min) / this.maxRangeWidth)) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth).max) / this.element.current[`client${this.ifVerticalElse('Height', 'Width')}`]
+    this.range.current.style[this.ifVerticalElse('top', 'left')] = `${(((this.value.min - this.options.min) / this.maxRangeWidth) + deltaOffset) * 100}%`
+    this.range.current.style[this.ifVerticalElse('height', 'width')] = `${(((this.value.max - this.options.min) / this.maxRangeWidth) - ((this.value.min - this.options.min) / this.maxRangeWidth) - deltaOffset + deltaDimension) * 100}%`
   }
 
   updateRangeLimits () {
-    this.rangeLimits[_min] = this.options[_thumbsDisabled][0] ? this.value[_min] : this.options[_min]
-    this.rangeLimits[_max] = this.options[_thumbsDisabled][1] ? this.value[_max] : this.options[_max]
+    this.iterateMinMaxProps((_, i) => {
+      this.rangeLimits[_] = this.options.thumbsDisabled[i] ? this.value[_] : this.options[_]
+    })
   }
 
-  // <thumb> width value is to be synced with CSS for correct calculation of <range> width and position
-  syncThumbWidth () {
-    this.thumbWidth[_min] = _parseFloat(_getComputedStyle(this.thumb[this.index[_min]][_current]).width)
-    this.thumbWidth[_max] = _parseFloat(_getComputedStyle(this.thumb[this.index[_max]][_current]).width)
+  // Called when,
+  // -> thumbs are initially set
+  // -> thumbs are disabled / enabled
+  updateTabIndexes () {
+    this.iterateMinMaxProps((_, i) => {
+      if (!this.options.disabled && !this.options.thumbsDisabled[i]) { this.setNodeAttribute(this.thumb[this.currentIndex(i)].current, TABINDEX, 0) } else { this.removeNodeAttribute(this.thumb[this.currentIndex(i)].current, TABINDEX) }
+    })
   }
 
+  // Called when,
+  // -> setValue is called and a value is set
+  updateAriaValueAttributes () {
+    this.iterateMinMaxProps(_ => {
+      this.setNodeAttribute(this.thumb[this.index[_]].current, 'aria-valuemin', this.options.min)
+      this.setNodeAttribute(this.thumb[this.index[_]].current, 'aria-valuemax', this.options.max)
+      this.setNodeAttribute(this.thumb[this.index[_]].current, 'aria-valuenow', this.value[_])
+      this.setNodeAttribute(this.thumb[this.index[_]].current, 'aria-valuetext', this.value[_])
+    })
+  }
+
+  // Called when,
+  // -> disabled property is modified
+  updateDisabledState () {
+    if (this.options.disabled) { this.setNodeAttribute(this.element.current, DATA_DISABLED) } else { this.removeNodeAttribute(this.element.current, DATA_DISABLED) }
+  }
+
+  // Called when,
+  // -> thumbsDisabled property is modified
+  updateThumbsDisabledState () {
+    this.options.thumbsDisabled.forEach((d, i) => {
+      const currIndex = this.currentIndex(i)
+      if (d) {
+        this.setNodeAttribute(this.thumb[currIndex].current, DATA_DISABLED)
+        this.setNodeAttribute(this.thumb[currIndex].current, 'aria-disabled', true)
+      } else {
+        this.removeNodeAttribute(this.thumb[currIndex].current, DATA_DISABLED)
+        this.setNodeAttribute(this.thumb[currIndex].current, 'aria-disabled', false)
+      }
+    })
+  }
+
+  // Called when,
+  // -> min or max values are modified
+  updateLimits (limit, m = false) {
+    this.options[limit] = m
+    this.safeMinMaxValues()
+    this.iterateMinMaxProps(_ => {
+      this.input[0].current[_] = this.options[_]
+      this.input[1].current[_] = this.options[_]
+    })
+    this.maxRangeWidth = this.options.max - this.options.min
+    this.setValue('', true)
+    this.updateRangeLimits()
+  }
+
+  // Called when,
+  // -> the element is initially set
+  // -> orientation property is modified
+  updateOrientation () {
+    if (this.options.orientation === VERTICAL) { this.setNodeAttribute(this.element.current, DATA_VERTICAL) } else { this.removeNodeAttribute(this.element.current, DATA_VERTICAL) }
+    this.range.current.style[this.ifVerticalElse('left', 'top')] = ''
+    this.range.current.style[this.ifVerticalElse('width', 'height')] = ''
+    this.thumb[0].current.style[this.ifVerticalElse('left', 'top')] = ''
+    this.thumb[1].current.style[this.ifVerticalElse('left', 'top')] = ''
+  }
+
+  // thumb width & height values are to be synced with the CSS values for correct calculation of
+  // thumb position and range width & position
+  // Called when,
+  // -> setValue is called and a value is set (called before updateThumbs() and updateRange())
+  // -> thumb / range drag is initiated
+  // -> window is resized
+  syncThumbDimensions () {
+    this.iterateMinMaxProps(_ => {
+      this.thumbWidth[_] = float(style(this.thumb[this.index[_]].current).width)
+      this.thumbHeight[_] = float(style(this.thumb[this.index[_]].current).height)
+    })
+  }
+
+  // thumb position calculation depending upon the pointer position
   currentPosition (e, node) {
-    return ((node.offsetLeft + (e[`client${this.options[_orientation] === 'vertical' ? 'Y' : 'X'}`] - node.getBoundingClientRect()[this.options[_orientation] === 'vertical' ? 'top' : 'left']) - (this.thumbDrag ? ((0.5 - (this.value[this.thumbDrag] - this.options[_min]) / this.maxWidth) * this.thumbWidth[this.thumbDrag]) : 0)) / this.element[_current].clientWidth) * this.maxWidth + this.options[_min]
+    const currPos = ((node[`offset${this.ifVerticalElse('Top', 'Left')}`] + (e[`client${this.ifVerticalElse('Y', 'X')}`] - node.getBoundingClientRect()[this.ifVerticalElse('top', 'left')]) - (this.thumbDrag ? ((0.5 - (this.value[this.thumbDrag] - this.options.min) / this.maxRangeWidth) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth)[this.thumbDrag]) : 0)) / this.element.current[`client${this.ifVerticalElse('Height', 'Width')}`]) * this.maxRangeWidth + this.options.min
+    if (currPos < this.options.min) { return this.options.min }
+    if (currPos > this.options.max) { return this.options.max }
+    return currPos
   }
 
-  eventElementTagName (e) {
-    return e.target.tagName.toLowerCase()
+  doesntHaveClassName (e, className) {
+    return !e.target.classList.contains(className)
   }
 
   elementFocused (e) {
     let setFocus = false
 
-    if (!this.options[_disabled] && ((this.eventElementTagName(e) !== 'thumb' && this.eventElementTagName(e) !== 'range') || (this.options[_rangeSlideDisabled] && this.eventElementTagName(e) !== 'thumb'))) { setFocus = true }
+    if (!this.isControlled && !this.options.disabled && ((this.doesntHaveClassName(e, 'range-slider__thumb') && this.doesntHaveClassName(e, 'range-slider__range')) || (this.options.rangeSlideDisabled && this.doesntHaveClassName(e, 'range-slider__thumb')))) { setFocus = true }
+
+    // No action if both thumbs are disabled
+    if (setFocus && this.options.thumbsDisabled[0] && this.options.thumbsDisabled[1]) { setFocus = false }
 
     if (setFocus) {
-      if (this.options[_thumbsDisabled][0] && this.options[_thumbsDisabled][1]) { setFocus = false }
-    }
+      const currPos = this.currentPosition(e, this.range.current)
+      const deltaMin = abs(this.value.min - currPos)
+      const deltaMax = abs(this.value.max - currPos)
 
-    if (setFocus) {
-      let currPos = this.currentPosition(e, this.range[_current])
-      if (currPos < 0) { currPos = 0 }
-      const deltaMin = _mathAbsolute(this.value[_min] - currPos)
-      const deltaMax = _mathAbsolute(this.value[_max] - currPos)
-
-      if (this.options[_thumbsDisabled][0]) {
-        if (currPos >= this.value[_min]) {
-          this.setValue({ min: this.value[_min], max: currPos }, true)
-          this.initiateThumbDrag(e, this.index[_max], this.thumb[this.index[_max]][_current])
+      if (this.options.thumbsDisabled[0]) {
+        if (currPos >= this.value.min) {
+          this.setValue(this.setMinMaxProps(this.value.min, currPos), true)
+          this.initiateThumbDrag(e, this.index.max, this.thumb[this.index.max].current)
         }
-      } else if (this.options[_thumbsDisabled][1]) {
-        if (currPos <= this.value[_max]) {
-          this.setValue({ min: currPos, max: this.value[_max] }, true)
-          this.initiateThumbDrag(e, this.index[_min], this.thumb[this.index[_min]][_current])
+      } else if (this.options.thumbsDisabled[1]) {
+        if (currPos <= this.value.max) {
+          this.setValue(this.setMinMaxProps(currPos, this.value.max), true)
+          this.initiateThumbDrag(e, this.index.min, this.thumb[this.index.min].current)
         }
       } else {
-        let nearestThumbIndex = 1
-        if (deltaMin === deltaMax) { this.setValue({ min: this.value[_min], max: currPos }, true) } else {
-          this.setValue({ min: deltaMin < deltaMax ? currPos : this.value[_min], max: deltaMax < deltaMin ? currPos : this.value[_max] }, true)
-          nearestThumbIndex = deltaMin < deltaMax ? this.index[_min] : this.index[_max]
+        let nearestThumbIndex = this.index.max
+        if (deltaMin === deltaMax) { this.setValue(this.setMinMaxProps(this.value.min, currPos), true) } else {
+          this.setValue(this.setMinMaxProps(deltaMin < deltaMax ? currPos : this.value.min, deltaMax < deltaMin ? currPos : this.value.max), true)
+          nearestThumbIndex = deltaMin < deltaMax ? this.index.min : this.index.max
         }
-        this.initiateThumbDrag(e, nearestThumbIndex, this.thumb[nearestThumbIndex][_current])
+        this.initiateThumbDrag(e, nearestThumbIndex, this.thumb[nearestThumbIndex].current)
       }
     }
   }
 
+  initiateDrag (e, node) {
+    this.syncThumbDimensions()
+    this.setNodeAttribute(node, DATA_ACTIVE)
+    this.startPos = this.currentPosition(e, node)
+    this.isDragging = true
+  }
+
   initiateThumbDrag (e, i, node) {
-    if (!this.options[_disabled] && !this.options[_thumbsDisabled][i === 1 ? this.index[_max] : this.index[_min]]) {
-      this.syncThumbWidth()
-      this.startPos = this.currentPosition(e, node)
-      this.thumbDrag = this.index[_min] === i ? _min : _max
-      this.thumbIndex = i
-      this.isDragging = true
-      this.thumb[i][_current][_setAttribute](_dataFocused, '')
+    if (!this.options.disabled && !this.options.thumbsDisabled[this.currentIndex(i)]) {
+      this.initiateDrag(e, node)
+      this.thumbDrag = this.index.min === i ? MIN : MAX
     }
   }
 
   initiateRangeDrag (e) {
-    if (!this.options[_disabled] && !this.options[_rangeSlideDisabled]) {
-      this.syncThumbWidth()
-      this.rangeWidth = this.value[_max] - this.value[_min]
-      this.startPos = this.currentPosition(e, this.range[_current])
+    if (!this.options.disabled && !this.options.rangeSlideDisabled) {
+      this.initiateDrag(e, this.range.current)
+      this.rangeWidth = this.value.max - this.value.min
       this.thumbDrag = false
-      this.isDragging = true
-      this.range[_current][_setAttribute](_dataFocused, '')
     }
   }
 
-  valuesUpdated (lastPos) {
-    this.startPos = lastPos
-    this.updateInputState()
-  }
-
   drag (e) {
-    if (this.isDragging) {
-      const lastPos = this.currentPosition(e, this.range[_current])
+    if (this.isDragging && !this.isControlled) {
+      const lastPos = this.currentPosition(e, this.range.current)
       const delta = lastPos - this.startPos
 
-      let min = this.value[_min]
-      let max = this.value[_max]
-      const lower = this.thumbDrag ? this.rangeLimits[_min] : this.options[_min]
-      const upper = this.thumbDrag ? this.rangeLimits[_max] : this.options[_max]
+      let min = this.value.min
+      let max = this.value.max
+      const lower = this.thumbDrag ? this.rangeLimits.min : this.options.min
+      const upper = this.thumbDrag ? this.rangeLimits.max : this.options.max
 
-      if (!this.thumbDrag || this.thumbDrag === _min) { min = this.thumbDrag ? lastPos : (this.sliderValue[_min] + delta) }
-      if (!this.thumbDrag || this.thumbDrag === _max) { max = this.thumbDrag ? lastPos : (this.sliderValue[_max] + delta) }
+      if (!this.thumbDrag || this.thumbDrag === MIN) { min = this.thumbDrag ? lastPos : (this.sliderValue.min + delta) }
+      if (!this.thumbDrag || this.thumbDrag === MAX) { max = this.thumbDrag ? lastPos : (this.sliderValue.max + delta) }
 
       if (min >= lower && min <= upper && max >= lower && max <= upper) {
         this.setValue({ min, max })
-        this.valuesUpdated(lastPos)
-        this.maxSet = false
-        this.minSet = false
+        this.startPos = lastPos
       } else {
         // When min thumb reaches upper limit
-        if (min > upper && this.thumbDrag && !this.minSet) {
-          this.setValue({ min: upper, max: upper })
-          this.valuesUpdated(lastPos)
-          this.minSet = true
+        if (min > upper && this.thumbDrag) {
+          this.setValue(this.setMinMaxProps(upper, upper))
+          this.startPos = lastPos
         }
         // When max thumb reaches lower limit
-        if (max < lower && this.thumbDrag && !this.maxSet) {
-          this.setValue({ min: lower, max: lower })
-          this.valuesUpdated(lastPos)
-          this.maxSet = true
+        if (max < lower && this.thumbDrag) {
+          this.setValue(this.setMinMaxProps(lower, lower))
+          this.startPos = lastPos
         }
         // When range / min thumb reaches lower limit
-        if (min < lower && !this.minSet) {
-          if (!this.thumbDrag) { this.setValue({ min: lower, max: this.value[_max] - this.value[_min] + lower }) } else { this.setValue({ min: lower, max: this.value[_max] }) }
-          this.valuesUpdated(lastPos)
-          this.minSet = true
+        if (min < lower) {
+          if (!this.thumbDrag) { this.setValue(this.setMinMaxProps(lower, this.value.max - this.value.min + lower)) } else { this.setValue(this.setMinMaxProps(lower, this.value.max)) }
+          this.startPos = lastPos
         }
         // When range / max thumb reaches upper limit
-        if (max > upper && !this.maxSet) {
-          if (!this.thumbDrag) { this.setValue({ min: this.value[_min] - this.value[_max] + upper, max: upper }) } else { this.setValue({ min: this.value[_min], max: upper }) }
-          this.valuesUpdated(lastPos)
-          this.maxSet = true
+        if (max > upper) {
+          if (!this.thumbDrag) { this.setValue(this.setMinMaxProps(this.value.min - this.value.max + upper, upper)) } else { this.setValue(this.setMinMaxProps(this.value.min, upper)) }
+          this.startPos = lastPos
         }
       }
       if (!this.thumbDrag) { this.updateRangeLimits() }
     }
   }
 
-  setDefaultIfNotSet (property, defaultValue) {
-    this.options[property] = {}.hasOwnProperty.call(this.props, property) ? this.props[property] : defaultValue
+  actualStepValue () {
+    const step = float(this.input[0].current.step)
+    return this.input[0].current.step === ANY ? ANY : ((step === 0 || isNaN(step)) ? 1 : step)
+  }
+
+  // Step value (up or down) using arrow keys
+  stepValue (i, key) {
+    const direction = (key === 37 || key === 40 ? -1 : 1) * this.ifVerticalElse(-1, 1)
+
+    if (!this.options.disabled && !this.options.thumbsDisabled[this.currentIndex(i)] && !this.isControlled) {
+      let step = this.actualStepValue()
+      step = step === ANY ? 1 : step
+
+      let min = this.value.min + step * (this.index.min === i ? direction : 0)
+      let max = this.value.max + step * (this.index.max === i ? direction : 0)
+
+      // When min thumb reaches upper limit
+      if (min > this.rangeLimits.max) { min = this.rangeLimits.max }
+
+      // When max thumb reaches lower limit
+      if (max < this.rangeLimits.min) { max = this.rangeLimits.min }
+
+      this.setValue({ min, max }, true)
+    }
   }
 
   render () {
-    this.setDefaultIfNotSet(_rangeSlideDisabled, false)
-    this.setDefaultIfNotSet(_thumbsDisabled, [false, false])
-    this.setDefaultIfNotSet(_orientation, 'horizontal')
-    this.setDefaultIfNotSet(_disabled, false)
-    this.setDefaultIfNotSet(_onInput, false)
-    this.setDefaultIfNotSet(_value, [0.25, 0.75])
-    this.setDefaultIfNotSet(_step, 'any')
-    this.setDefaultIfNotSet(_min, 0)
-    this.setDefaultIfNotSet(_max, 1)
+    // Set options to default values if not set
+    this.fallbackToDefault('rangeSlideDisabled', false)
+    this.fallbackToDefault('thumbsDisabled', [false, false])
+    this.fallbackToDefault('orientation', 'horizontal')
+    this.fallbackToDefault('defaultValue', [25, 75])
+    this.fallbackToDefault('disabled', false)
+    this.fallbackToDefault('onInput', false)
+    this.fallbackToDefault('step', 1)
+    this.fallbackToDefault('min', 0)
+    this.fallbackToDefault('max', 100)
+    if(this.props.value)
+      this.fallbackToDefault('value', [25, 75])
 
     this.safeMinMaxValues()
     this.safeThumbsDisabledValues()
 
     return (
       <div id={this.props.id} ref={this.element} className={clsx('range-slider', this.props.className)}>
-        <input ref={this.input[0]} type='range' min={this.options[_min]} max={this.options[_max]} step={this.options[_step]} value={this.value[_min] === -1 ? this.options[_value][0] : this.value[_min]} onChange={() => {}} />
-        <input ref={this.input[1]} type='range' min={this.options[_min]} max={this.options[_max]} step={this.options[_step]} value={this.value[_max] === -1 ? this.options[_value][1] : this.value[_max]} onChange={() => {}} />
-        <thumb ref={this.thumb[0]} is='custom' data-lower />
-        <thumb ref={this.thumb[1]} is='custom' data-upper />
-        <range ref={this.range} is='custom' />
+        <input ref={this.input[0]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[0] : (this.isComponentMounted ? this.value.min : this.options.defaultValue[0])} onChange={() => {}} disabled />
+        <input ref={this.input[1]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[1] : (this.isComponentMounted ? this.value.max : this.options.defaultValue[1])} onChange={() => {}} disabled />
+        <div ref={this.thumb[0]} role='slider' className='range-slider__thumb' data-lower />
+        <div ref={this.thumb[1]} role='slider' className='range-slider__thumb' data-upper />
+        <div ref={this.range} className='range-slider__range' />
       </div>
     )
   }

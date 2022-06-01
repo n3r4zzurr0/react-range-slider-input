@@ -1,6 +1,6 @@
 {
   "name": "react-range-slider-input",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "private": false,
   "description": "React component wrapper for range-slider-input",
   "author": "Utkarsh Verma",
@@ -25,11 +25,24 @@
     "type": "git",
     "url": "git+https://github.com/n3r4zzurr0/react-range-slider-input.git"
   },
+  "standard": {
+    "ignore": [
+      "src/__tests__/RangeSlider.spec.js"
+    ]
+  },
+  "jest": {
+    "modulePathIgnorePatterns": [
+      "__mocks__"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less)$": "<rootDir>/src/__tests__/__mocks__/styleMock.js"
+    }
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "NODE_ENV=production babel src/lib --out-dir dist --copy-files",
     "eject": "react-scripts eject",
-    "test": "standard"
+    "test": "standard && jest --env=jsdom"
   },
   "browserslist": {
     "production": [
@@ -47,9 +60,11 @@
     "@babel/cli": "^7.17.10",
     "@babel/core": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.2.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "standard": "^17.0.0"
   },
   "dependencies": {
