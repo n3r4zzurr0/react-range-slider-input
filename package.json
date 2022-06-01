@@ -36,13 +36,14 @@
     ],
     "moduleNameMapper": {
       "\\.(css|less)$": "<rootDir>/src/__tests__/__mocks__/styleMock.js"
-    }
+    },
+    "testEnvironment": "jsdom"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "NODE_ENV=production babel src/lib --out-dir dist --copy-files",
     "eject": "react-scripts eject",
-    "test": "standard && jest --env=jsdom"
+    "test": "standard && jest"
   },
   "browserslist": {
     "production": [
