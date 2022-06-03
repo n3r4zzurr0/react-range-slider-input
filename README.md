@@ -10,7 +10,7 @@
 # react-range-slider-input
 [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![javascript style guide][standard-image]][standard-url] [![license][license-image]][license-url]
 
-React component wrapper for [range-slider-input](https://github.com/n3r4zzurr0/range-slider-input).
+React component wrapper for [range-slider-input](https://github.com/n3r4zzurr0/range-slider-input) (a lightweight [~2kB] library to create range sliders that can capture a value or a range of values with one or two drag handles).
 
 **[CodeSanbox Demo](https://codesandbox.io/s/react-range-slider-input-demo-ymw2kp?file=/src/App.js)**
 
@@ -18,7 +18,7 @@ React component wrapper for [range-slider-input](https://github.com/n3r4zzurr0/r
 
 <hr>
 
-:warning: **It is recommended that you upgrade from v1.x to v2.x! [What's new and what's changed in v2.x?](https://github.com/n3r4zzurr0/range-slider-input/blob/main/CHANGELOG.md)**
+:warning: **It is recommended that you upgrade from v1.x to v2.x! [What's new and what's changed in v2.x?](https://github.com/n3r4zzurr0/react-range-slider-input/blob/main/CHANGELOG.md#v20x)**
 
 <hr>
 <br>
@@ -97,6 +97,30 @@ export default App;
     <td>function</td>
     <td>NOOP</td>
     <td>Function to be called when there is a change in the value(s) of range sliders upon user interaction.</td>
+</tr>
+<tr>
+    <td><code>onThumbDragStart</code></td>
+    <td>function</td>
+    <td>NOOP</td>
+    <td>Function to be called when the <code>pointerdown</code> event is triggered for any of the thumbs.</td>
+</tr>
+<tr>
+    <td><code>onThumbDragEnd</code></td>
+    <td>function</td>
+    <td>NOOP</td>
+    <td>Function to be called when the <code>pointerup</code> event is triggered for any of the thumbs.</td>
+</tr>
+<tr>
+    <td><code>onRangeDragStart</code></td>
+    <td>function</td>
+    <td>NOOP</td>
+    <td>Function to be called when the <code>pointerdown</code> event is triggered for the range.</td>
+</tr>
+<tr>
+    <td><code>onRangeDragEnd</code></td>
+    <td>function</td>
+    <td>NOOP</td>
+    <td>Function to be called when the <code>pointerup</code> event is triggered for the range.</td>
 </tr>
 <tr>
     <td><code>disabled</code></td>

@@ -88,6 +88,11 @@ class RangeSlider extends PureComponent {
           this.removeNodeAttribute(this.thumb[1].current, DATA_ACTIVE)
           this.removeNodeAttribute(this.range.current, DATA_ACTIVE)
           this.isDragging = false
+          if (this.thumbDrag) {
+            if (this.options.onThumbDragEnd) { this.options.onThumbDragEnd() }
+          } else {
+            if (this.options.onRangeDragEnd) { this.options.onRangeDragEnd() }
+          }
         }
       })
       this.addNodeEventListener(window, 'resize', () => {
@@ -408,6 +413,7 @@ class RangeSlider extends PureComponent {
     if (!this.options.disabled && !this.options.thumbsDisabled[this.currentIndex(i)]) {
       this.initiateDrag(e, node)
       this.thumbDrag = this.index.min === i ? MIN : MAX
+      if (this.options.onThumbDragStart) { this.options.onThumbDragStart() }
     }
   }
 
@@ -416,6 +422,7 @@ class RangeSlider extends PureComponent {
       this.initiateDrag(e, this.range.current)
       this.rangeWidth = this.value.max - this.value.min
       this.thumbDrag = false
+      if (this.options.onRangeDragStart) { this.options.onRangeDragStart() }
     }
   }
 
@@ -494,6 +501,10 @@ class RangeSlider extends PureComponent {
     this.fallbackToDefault('orientation', 'horizontal')
     this.fallbackToDefault('defaultValue', [25, 75])
     this.fallbackToDefault('disabled', false)
+    this.fallbackToDefault('onThumbDragStart', false)
+    this.fallbackToDefault('onRangeDragStart', false)
+    this.fallbackToDefault('onThumbDragEnd', false)
+    this.fallbackToDefault('onRangeDragEnd', false)
     this.fallbackToDefault('onInput', false)
     this.fallbackToDefault('step', 1)
     this.fallbackToDefault('min', 0)
@@ -504,7 +515,7 @@ class RangeSlider extends PureComponent {
     this.safeThumbsDisabledValues()
 
     return (
-      <div data-testid="element" id={this.props.id} ref={this.element} className={clsx('range-slider', this.props.className)}>
+      <div data-testid='element' id={this.props.id} ref={this.element} className={clsx('range-slider', this.props.className)}>
         <input ref={this.input[0]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[0] : (this.isComponentMounted ? this.value.min : this.options.defaultValue[0])} onChange={() => {}} disabled />
         <input ref={this.input[1]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[1] : (this.isComponentMounted ? this.value.max : this.options.defaultValue[1])} onChange={() => {}} disabled />
         <div ref={this.thumb[0]} role='slider' className='range-slider__thumb' data-lower />
