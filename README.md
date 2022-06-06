@@ -1,14 +1,16 @@
-[travis-image]: https://img.shields.io/travis/n3r4zzurr0/react-range-slider-input/master.svg
-[travis-url]: https://app.travis-ci.com/github/n3r4zzurr0/react-range-slider-input
+[circleci-image]: https://circleci.com/gh/n3r4zzurr0/react-range-slider-input.svg?style=shield
+[circleci-url]: https://circleci.com/gh/n3r4zzurr0/react-range-slider-input
 [npm-image]: https://img.shields.io/npm/v/react-range-slider-input.svg
 [npm-url]: https://npmjs.org/package/react-range-slider-input
+[vulnerabilities-image]: https://snyk.io/test/npm/react-range-slider-input/badge.svg
+[vulnerabilities-url]: https://snyk.io/test/npm/react-range-slider-input
 [standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
 [standard-url]: https://standardjs.com
 [license-image]: https://img.shields.io/github/license/n3r4zzurr0/range-slider-input.svg
 [license-url]: https://github.com/n3r4zzurr0/range-slider-input/blob/main/LICENSE
 
 # react-range-slider-input
-[![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![javascript style guide][standard-image]][standard-url] [![license][license-image]][license-url]
+[![circleci][circleci-image]][circleci-url] [![npm][npm-image]][npm-url] [![known vulnerabilities][vulnerabilities-image]][vulnerabilities-url] [![javascript style guide][standard-image]][standard-url] [![license][license-image]][license-url]
 
 React component wrapper for [range-slider-input](https://github.com/n3r4zzurr0/range-slider-input) (a lightweight [~2kB] library to create range sliders that can capture a value or a range of values with one or two drag handles).
 
