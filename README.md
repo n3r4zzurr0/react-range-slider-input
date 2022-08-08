@@ -20,7 +20,7 @@ React component wrapper for [range-slider-input](https://github.com/n3r4zzurr0/r
 
 <hr>
 
-:warning: **It is recommended that you upgrade from v1.x to v2.x! [What's new and what's changed in v2.x?](https://github.com/n3r4zzurr0/react-range-slider-input/blob/main/CHANGELOG.md#v20x)**
+:warning: **It is recommended that you upgrade from v1.x to v2.x! [What's new and what's changed in v2.x?](https://github.com/n3r4zzurr0/react-range-slider-input/blob/master/CHANGELOG.md#v20x)**
 
 <hr>
 <br>
