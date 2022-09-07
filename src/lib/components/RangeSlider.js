@@ -31,8 +31,11 @@ class RangeSlider extends PureComponent {
     this.range = createRef()
 
     this.options = {}
+    this.firstCall = true
     this.isControlled = false
+    this.externalInput = false
     this.isComponentMounted = false
+    this.lastValueProp = []
   }
 
   componentDidMount () {
@@ -110,6 +113,14 @@ class RangeSlider extends PureComponent {
   }
 
   reset () {
+    this.isControlled = !!this.props.value
+    if (this.isControlled) {
+      if (this.firstCall || this.props.value !== this.lastValueProp) {
+        this.firstCall = false
+        this.externalInput = true
+      }
+      this.lastValueProp = this.props.value
+    }
     this.maxRangeWidth = this.options.max - this.options.min
     this.updateOrientation()
     this.setValue('', true, false)
@@ -117,7 +128,6 @@ class RangeSlider extends PureComponent {
     this.updateDisabledState()
     this.updateThumbsDisabledState()
     this.updateTabIndexes()
-    this.isControlled = !!this.props.value
   }
 
   isNumber (n) {
@@ -199,7 +209,7 @@ class RangeSlider extends PureComponent {
   setValue (newValue, forceSet = false, callback = true) {
     // Current value as set in the input elements
     // which could change while changing min, max and step values
-    const currentValue = this.setMinMaxProps(this.input[this.index.min].current.value, this.input[this.index.max].current.value)
+    const currentValue = this.setMinMaxProps(this.input[0].current.value, this.input[1].current.value)
 
     // var value is synced with the values set in the input elements if no newValue is passed
     newValue = newValue || currentValue
@@ -230,18 +240,21 @@ class RangeSlider extends PureComponent {
 
     let valueSet = false
 
-    if (currentValue.min !== this.input[this.index.min].current.value || forceSet) { valueSet = true }
+    if (currentValue.min !== this.input[0].current.value || forceSet) { valueSet = true }
 
-    if (currentValue.max !== this.input[this.index.max].current.value || forceSet) { valueSet = true }
+    if (currentValue.max !== this.input[1].current.value || forceSet) { valueSet = true }
 
     // Update the positions, dimensions and aria attributes everytime a value is set
     // and call the onInput function from options (if set)
     if (valueSet) {
       if (callback && this.options.onInput) { this.options.onInput([this.value.min, this.value.max]) }
-      this.syncThumbDimensions()
-      this.updateThumbs()
-      this.updateRange()
-      this.updateAriaValueAttributes()
+      if (!this.isControlled || this.externalInput) {
+        this.externalInput = false
+        this.syncThumbDimensions()
+        this.updateThumbs()
+        this.updateRange()
+        this.updateAriaValueAttributes()
+      }
     }
   }
 
@@ -371,7 +384,7 @@ class RangeSlider extends PureComponent {
   elementFocused (e) {
     let setFocus = false
 
-    if (!this.isControlled && !this.options.disabled && ((this.doesntHaveClassName(e, 'range-slider__thumb') && this.doesntHaveClassName(e, 'range-slider__range')) || (this.options.rangeSlideDisabled && this.doesntHaveClassName(e, 'range-slider__thumb')))) { setFocus = true }
+    if (!this.options.disabled && ((this.doesntHaveClassName(e, 'range-slider__thumb') && this.doesntHaveClassName(e, 'range-slider__range')) || (this.options.rangeSlideDisabled && this.doesntHaveClassName(e, 'range-slider__thumb')))) { setFocus = true }
 
     // No action if both thumbs are disabled
     if (setFocus && this.options.thumbsDisabled[0] && this.options.thumbsDisabled[1]) { setFocus = false }
@@ -427,7 +440,7 @@ class RangeSlider extends PureComponent {
   }
 
   drag (e) {
-    if (this.isDragging && !this.isControlled) {
+    if (this.isDragging) {
       const lastPos = this.currentPosition(e, this.range.current)
       const delta = lastPos - this.startPos
 
@@ -477,7 +490,7 @@ class RangeSlider extends PureComponent {
   stepValue (i, key) {
     const direction = (key === 37 || key === 40 ? -1 : 1) * this.ifVerticalElse(-1, 1)
 
-    if (!this.options.disabled && !this.options.thumbsDisabled[this.currentIndex(i)] && !this.isControlled) {
+    if (!this.options.disabled && !this.options.thumbsDisabled[this.currentIndex(i)]) {
       let step = this.actualStepValue()
       step = step === ANY ? 1 : step
 
