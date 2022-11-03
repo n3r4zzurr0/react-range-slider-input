@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import RangeSlider from './lib/index.js'
+import './lib/style.css'
 import './Example.css'
 
 export default () => {
