@@ -1,6 +1,5 @@
-import React, { PureComponent, createRef } from 'react'
+import { PureComponent, createRef } from 'react'
 import clsx from 'clsx'
-import './index.css'
 
 // Aliases
 const abs = Math.abs

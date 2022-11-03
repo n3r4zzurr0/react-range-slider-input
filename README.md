@@ -18,11 +18,7 @@ React component wrapper for [range-slider-input](https://github.com/n3r4zzurr0/r
 
 [![Demo](https://n3r4zzurr0.in/static/rsi-demo600.gif)](https://n3r4zzurr0.in/range-slider-input/)
 
-<hr>
 
-:warning: **It is recommended that you upgrade from v1.x to v2.x! [What's new and what's changed in v2.x?](https://github.com/n3r4zzurr0/react-range-slider-input/blob/master/CHANGELOG.md#v20x)**
-
-<hr>
 <br>
 
 ## Installation
@@ -31,16 +27,27 @@ npm install react-range-slider-input
 ```
 
 ## Usage
+
+**v3.0.x and above (recommended)**
 ```js
 import RangeSlider from 'react-range-slider-input';
+import 'react-range-slider-input/dist/style.css';
 
-function App() {
+export default function () {
     return (
         <RangeSlider />
     );
 }
+```
+**v2.1.x and below**
+```js
+import RangeSlider from 'react-range-slider-input';
 
-export default App;
+export default function () {
+    return (
+        <RangeSlider />
+    );
+}
 ```
 
 ## Props

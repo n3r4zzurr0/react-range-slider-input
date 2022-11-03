@@ -1,3 +1,6 @@
+### v3.0.x
+Internal references to CSS files have been removed. The user has to import the CSS files by themselves.
+
 ### v2.1.x
 New props: `onThumbDragStart`, `onThumbDragEnd`, `onRangeDragStart` and `onRangeDragEnd`
 
