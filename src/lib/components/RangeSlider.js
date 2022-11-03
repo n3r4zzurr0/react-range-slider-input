@@ -4,7 +4,6 @@ import clsx from 'clsx'
 // Aliases
 const abs = Math.abs
 const float = parseFloat
-const style = window.getComputedStyle
 
 // Values
 const MIN = 'min'
@@ -363,8 +362,8 @@ class RangeSlider extends PureComponent {
   // -> window is resized
   syncThumbDimensions () {
     this.iterateMinMaxProps(_ => {
-      this.thumbWidth[_] = float(style(this.thumb[this.index[_]].current).width)
-      this.thumbHeight[_] = float(style(this.thumb[this.index[_]].current).height)
+      this.thumbWidth[_] = float(window.getComputedStyle(this.thumb[this.index[_]].current).width)
+      this.thumbHeight[_] = float(window.getComputedStyle(this.thumb[this.index[_]].current).height)
     })
   }
 
