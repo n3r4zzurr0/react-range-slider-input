@@ -37,7 +37,6 @@ class RangeSlider extends PureComponent {
   }
 
   componentDidMount () {
-    console.log("Range Slider Mounted");
     if (!this.isComponentMounted) {
       this.value = this.setMinMaxProps()
 
@@ -115,8 +114,7 @@ class RangeSlider extends PureComponent {
     this.reset()
   }
 
-  componentWillUnmount() {
-    console.log("Range Slider Unmounted");
+  componentWillUnmount () {
     // Remove global listeners
     this.removeNodeEventListener(document, 'pointermove', this.pointerMoveEvent)
     this.removeNodeEventListener(document, 'pointerup', this.pointerUpEvent)
