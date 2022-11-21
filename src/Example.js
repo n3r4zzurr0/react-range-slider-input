@@ -4,6 +4,8 @@ import './lib/style.css'
 import './Example.css'
 
 export default () => {
+  const [toggleSecond, setToggleSecond] = useState(true)
+
   const [classes, setClasses] = useState()
   const [min, setMin] = useState(0)
   const [max, setMax] = useState(100)
@@ -16,6 +18,8 @@ export default () => {
 
   return (
     <div className='container'>
+      <button onClick={() => { setToggleSecond(!toggleSecond) }}>Toggle Second Range Slider</button>
+      <br /><br />
       <button onClick={() => {
         setMin(30)
         setMax(90)
@@ -53,6 +57,7 @@ export default () => {
         thumbsDisabled={thumbsDisabled}
         rangeSlideDisabled={rangeSlideDisabled}
       />
+      {toggleSecond && <RangeSlider />}
     </div>
   )
 }

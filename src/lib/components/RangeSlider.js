@@ -37,6 +37,7 @@ class RangeSlider extends PureComponent {
   }
 
   componentDidMount () {
+    console.log("Range Slider Mounted");
     if (!this.isComponentMounted) {
       this.value = this.setMinMaxProps()
 
@@ -81,9 +82,9 @@ class RangeSlider extends PureComponent {
       // Add listeners to range
       this.addNodeEventListener(this.range.current, 'pointerdown', e => { this.initiateRangeDrag(e) })
 
-      // Add global listeners
-      this.addNodeEventListener(document, 'pointermove', e => { this.drag(e) })
-      this.addNodeEventListener(document, 'pointerup', () => {
+      // Define and add global listeners
+      this.pointerMoveEvent = e => { this.drag(e) }
+      this.pointerUpEvent = () => {
         if (this.isDragging) {
           this.removeNodeAttribute(this.thumb[0].current, DATA_ACTIVE)
           this.removeNodeAttribute(this.thumb[1].current, DATA_ACTIVE)
@@ -95,12 +96,16 @@ class RangeSlider extends PureComponent {
             if (this.options.onRangeDragEnd) { this.options.onRangeDragEnd() }
           }
         }
-      })
-      this.addNodeEventListener(window, 'resize', () => {
+      }
+      this.resizeEvent = () => {
         this.syncThumbDimensions()
         this.updateThumbs()
         this.updateRange()
-      })
+      }
+
+      this.addNodeEventListener(document, 'pointermove', this.pointerMoveEvent)
+      this.addNodeEventListener(document, 'pointerup', this.pointerUpEvent)
+      this.addNodeEventListener(window, 'resize', this.resizeEvent)
 
       this.isComponentMounted = true
     }
@@ -108,6 +113,15 @@ class RangeSlider extends PureComponent {
 
   componentDidUpdate () {
     this.reset()
+  }
+
+  componentWillUnmount() {
+    console.log("Range Slider Unmounted");
+    // Remove global listeners
+    this.removeNodeEventListener(document, 'pointermove', this.pointerMoveEvent)
+    this.removeNodeEventListener(document, 'pointerup', this.pointerUpEvent)
+    this.removeNodeEventListener(window, 'resize', this.resizeEvent)
+    this.isComponentMounted = false
   }
 
   reset () {
@@ -157,6 +171,11 @@ class RangeSlider extends PureComponent {
   addNodeEventListener (node, event, fn, isPointerEvent = true) {
     // with options for pointer events
     node.addEventListener(event, fn, isPointerEvent ? { passive: false, capture: true } : {})
+  }
+
+  removeNodeEventListener (node, event, fn, isPointerEvent = true) {
+    // with options for pointer events
+    node.removeEventListener(event, fn, isPointerEvent ? { passive: false, capture: true } : {})
   }
 
   fallbackToDefault (property, defaultValue) {
