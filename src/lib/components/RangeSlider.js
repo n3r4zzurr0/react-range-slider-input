@@ -293,8 +293,9 @@ class RangeSlider extends PureComponent {
   // -> setValue is called and a value is set
   // -> window is resized
   updateRange () {
-    const deltaOffset = ((0.5 - ((this.value.min - this.options.min) / this.maxRangeWidth)) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth).min) / this.element.current[`client${this.ifVerticalElse('Height', 'Width')}`]
-    const deltaDimension = ((0.5 - ((this.value.max - this.options.min) / this.maxRangeWidth)) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth).max) / this.element.current[`client${this.ifVerticalElse('Height', 'Width')}`]
+    const elementBounds = this.element.current.getBoundingClientRect()
+    const deltaOffset = ((0.5 - ((this.value.min - this.options.min) / this.maxRangeWidth)) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth).min) / this.ifVerticalElse(elementBounds.bottom - elementBounds.top, elementBounds.right - elementBounds.left)
+    const deltaDimension = ((0.5 - ((this.value.max - this.options.min) / this.maxRangeWidth)) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth).max) / this.ifVerticalElse(elementBounds.bottom - elementBounds.top, elementBounds.right - elementBounds.left)
     this.range.current.style[this.ifVerticalElse('top', 'left')] = `${(((this.value.min - this.options.min) / this.maxRangeWidth) + deltaOffset) * 100}%`
     this.range.current.style[this.ifVerticalElse('height', 'width')] = `${(((this.value.max - this.options.min) / this.maxRangeWidth) - ((this.value.min - this.options.min) / this.maxRangeWidth) - deltaOffset + deltaDimension) * 100}%`
   }
@@ -386,7 +387,9 @@ class RangeSlider extends PureComponent {
 
   // thumb position calculation depending upon the pointer position
   currentPosition (e, node) {
-    const currPos = ((node[`offset${this.ifVerticalElse('Top', 'Left')}`] + (e[`client${this.ifVerticalElse('Y', 'X')}`] - node.getBoundingClientRect()[this.ifVerticalElse('top', 'left')]) - (this.thumbDrag ? ((0.5 - (this.value[this.thumbDrag] - this.options.min) / this.maxRangeWidth) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth)[this.thumbDrag]) : 0)) / this.element.current[`client${this.ifVerticalElse('Height', 'Width')}`]) * this.maxRangeWidth + this.options.min
+    const elementBounds = this.element.current.getBoundingClientRect()
+    const nodeBounds = node.getBoundingClientRect()
+    const currPos = ((this.ifVerticalElse(nodeBounds.top - elementBounds.top, nodeBounds.left - elementBounds.left) + (e[`client${this.ifVerticalElse('Y', 'X')}`] - node.getBoundingClientRect()[this.ifVerticalElse('top', 'left')]) - (this.thumbDrag ? ((0.5 - (this.value[this.thumbDrag] - this.options.min) / this.maxRangeWidth) * this.ifVerticalElse(this.thumbHeight, this.thumbWidth)[this.thumbDrag]) : 0)) / this.ifVerticalElse(elementBounds.bottom - elementBounds.top, elementBounds.right - elementBounds.left)) * this.maxRangeWidth + this.options.min
     if (currPos < this.options.min) { return this.options.min }
     if (currPos > this.options.max) { return this.options.max }
     return currPos
@@ -396,7 +399,7 @@ class RangeSlider extends PureComponent {
     return !e.target.classList.contains(className)
   }
 
-  elementFocused (e) {
+  elementFocused (e, repeat = true) {
     let setFocus = false
 
     if (!this.options.disabled && ((this.doesntHaveClassName(e, 'range-slider__thumb') && this.doesntHaveClassName(e, 'range-slider__range')) || (this.options.rangeSlideDisabled && this.doesntHaveClassName(e, 'range-slider__thumb')))) { setFocus = true }
@@ -411,22 +414,23 @@ class RangeSlider extends PureComponent {
 
       if (this.options.thumbsDisabled[0]) {
         if (currPos >= this.value.min) {
-          this.setValue(this.setMinMaxProps(this.value.min, currPos), true)
-          this.initiateThumbDrag(e, this.index.max, this.thumb[this.index.max].current)
+          this.setValue(this.setMinMaxProps(this.value.min, currPos), true, !repeat)
+          this.initiateThumbDrag(e, this.index.max, this.thumb[this.index.max].current, !repeat)
         }
       } else if (this.options.thumbsDisabled[1]) {
         if (currPos <= this.value.max) {
-          this.setValue(this.setMinMaxProps(currPos, this.value.max), true)
-          this.initiateThumbDrag(e, this.index.min, this.thumb[this.index.min].current)
+          this.setValue(this.setMinMaxProps(currPos, this.value.max), true, !repeat)
+          this.initiateThumbDrag(e, this.index.min, this.thumb[this.index.min].current, !repeat)
         }
       } else {
         let nearestThumbIndex = this.index.max
-        if (deltaMin === deltaMax) { this.setValue(this.setMinMaxProps(this.value.min, currPos), true) } else {
-          this.setValue(this.setMinMaxProps(deltaMin < deltaMax ? currPos : this.value.min, deltaMax < deltaMin ? currPos : this.value.max), true)
+        if (deltaMin === deltaMax) { this.setValue(this.setMinMaxProps(this.value.min, currPos), true, !repeat) } else {
+          this.setValue(this.setMinMaxProps(deltaMin < deltaMax ? currPos : this.value.min, deltaMax < deltaMin ? currPos : this.value.max), true, !repeat)
           nearestThumbIndex = deltaMin < deltaMax ? this.index.min : this.index.max
         }
-        this.initiateThumbDrag(e, nearestThumbIndex, this.thumb[nearestThumbIndex].current)
+        this.initiateThumbDrag(e, nearestThumbIndex, this.thumb[nearestThumbIndex].current, !repeat)
       }
+      if (repeat) { this.elementFocused(e, false) }
     }
   }
 
@@ -437,11 +441,11 @@ class RangeSlider extends PureComponent {
     this.isDragging = true
   }
 
-  initiateThumbDrag (e, i, node) {
+  initiateThumbDrag (e, i, node, callback = true) {
     if (!this.options.disabled && !this.options.thumbsDisabled[this.currentIndex(i)]) {
       this.initiateDrag(e, node)
       this.thumbDrag = this.index.min === i ? MIN : MAX
-      if (this.options.onThumbDragStart) { this.options.onThumbDragStart() }
+      if (callback && this.options.onThumbDragStart) { this.options.onThumbDragStart() }
     }
   }
 
