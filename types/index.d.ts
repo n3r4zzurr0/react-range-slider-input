@@ -33,7 +33,7 @@ export interface ReactRangeSliderInputProps {
    * Number that specifies the amount by which the slider value(s) will change upon user interaction.
    * Other than numbers, the value of step can be a string value of any.
    * */
-  step?: number | "any";
+  step?: Step;
 
   /* @default [25, 75]
    * Array of two numbers that specify the default values of the lower and upper offsets of the range slider element respectively.
