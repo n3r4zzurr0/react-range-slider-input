@@ -1,3 +1,6 @@
+### v.3.1.x
+Merged a [PR](https://github.com/n3r4zzurr0/react-range-slider-input/pull/9) that adds a TypeScript declaration file.
+
 ### v3.0.x
 Internal references to CSS files have been removed. The user has to import the CSS files by themselves.
 

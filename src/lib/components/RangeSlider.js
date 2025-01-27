@@ -136,8 +136,7 @@ class RangeSlider extends PureComponent {
     this.updateDisabledState()
     this.updateThumbsDisabledState()
     this.updateTabIndexes()
-    if (first)
-      this.sliderValue = this.value
+    if (first) { this.sliderValue = this.value }
   }
 
   isNumber (n) {
@@ -255,8 +254,8 @@ class RangeSlider extends PureComponent {
 
     let valueSet = false
 
-    const currentValues = [currentValue.min, currentValue.max].sort((a, b) => a - b);
-    const elementValues = [this.input[0].current.value, this.input[1].current.value].sort((a, b) => a - b);
+    const currentValues = [currentValue.min, currentValue.max].sort((a, b) => a - b)
+    const elementValues = [this.input[0].current.value, this.input[1].current.value].sort((a, b) => a - b)
 
     if (currentValues[0] !== elementValues[0] || forceSet) { valueSet = true }
     if (currentValues[1] !== elementValues[1] || forceSet) { valueSet = true }
