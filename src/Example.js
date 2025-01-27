@@ -51,6 +51,7 @@ export default () => {
         max={max}
         step={step}
         value={value}
+        onInput={setValue}
         defaultValue={[15, 90]}
         orientation={orientation}
         disabled={disabled}

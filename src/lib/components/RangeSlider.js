@@ -29,7 +29,6 @@ class RangeSlider extends PureComponent {
     this.range = createRef()
 
     this.options = {}
-    this.firstCall = true
     this.isControlled = false
     this.externalInput = false
     this.isComponentMounted = false
@@ -62,7 +61,7 @@ class RangeSlider extends PureComponent {
       this.startPos = 0
 
       // initial
-      this.reset()
+      this.reset(true)
 
       // Add listeners to element
       this.addNodeEventListener(this.element.current, 'pointerdown', e => { this.elementFocused(e) })
@@ -122,11 +121,10 @@ class RangeSlider extends PureComponent {
     this.isComponentMounted = false
   }
 
-  reset () {
+  reset (first = false) {
     this.isControlled = !!this.props.value
     if (this.isControlled) {
-      if (this.firstCall || this.props.value !== this.lastValueProp) {
-        this.firstCall = false
+      if (first || this.props.value !== this.lastValueProp) {
         this.externalInput = true
       }
       this.lastValueProp = this.props.value
@@ -138,6 +136,8 @@ class RangeSlider extends PureComponent {
     this.updateDisabledState()
     this.updateThumbsDisabledState()
     this.updateTabIndexes()
+    if (first)
+      this.sliderValue = this.value
   }
 
   isNumber (n) {
@@ -251,13 +251,15 @@ class RangeSlider extends PureComponent {
       this.syncValues()
     }
 
-    this.sliderValue = forceSet ? this.value : newValue
+    this.sliderValue = forceSet ? this.sliderValue : newValue
 
     let valueSet = false
 
-    if (currentValue.min !== this.input[0].current.value || forceSet) { valueSet = true }
+    const currentValues = [currentValue.min, currentValue.max].sort((a, b) => a - b);
+    const elementValues = [this.input[0].current.value, this.input[1].current.value].sort((a, b) => a - b);
 
-    if (currentValue.max !== this.input[1].current.value || forceSet) { valueSet = true }
+    if (currentValues[0] !== elementValues[0] || forceSet) { valueSet = true }
+    if (currentValues[1] !== elementValues[1] || forceSet) { valueSet = true }
 
     // Update the positions, dimensions and aria attributes everytime a value is set
     // and call the onInput function from options (if set)
