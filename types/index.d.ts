@@ -94,6 +94,16 @@ export interface ReactRangeSliderInputProps {
    * It takes two different values: horizontal and vertical.
    * */
   orientation?: Orientation;
+
+  /*
+   * Array of two strings that set the aria-label attribute on the lower and upper thumbs respectively.
+   * */
+  ariaLabel?: [string, string];
+
+  /*
+  /* Array of two strings that set the aria-labelledby attribute on the lower and upper thumbs respectively.
+   * */
+  ariaLabelledBy?: [string, string];
 }
 
 const ReactRangeSliderInput: FC<ReactRangeSliderInputProps>;

@@ -1,3 +1,6 @@
+### v.3.2.x
+New props: `ariaLabel` and `ariaLabelledBy`
+
 ### v.3.1.x
 Merged a [PR](https://github.com/n3r4zzurr0/react-range-slider-input/pull/9) that adds a TypeScript declaration file.
 

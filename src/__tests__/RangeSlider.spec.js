@@ -10,7 +10,6 @@ describe('RangeSlider specs', () => {
     const range = element[0].querySelectorAll('.range-slider__range')
     
     expect(element.length).toEqual(1)
-    expect(element[0].querySelectorAll('input').length).toEqual(2)
     expect(thumbs.length).toEqual(2)
     expect(range.length).toEqual(1)
   })

@@ -19,12 +19,16 @@ const DATA_ACTIVE = 'data-active'
 const DATA_VERTICAL = 'data-vertical'
 const DATA_DISABLED = 'data-disabled'
 
+// ARIA Attributes
+const ARIA_LABEL = 'aria-label'
+const ARIA_LABELLEDBY = 'aria-labelledby'
+
 class RangeSlider extends PureComponent {
   constructor () {
     super()
 
     this.element = createRef()
-    this.input = [createRef(), createRef()]
+    this.input = []
     this.thumb = [createRef(), createRef()]
     this.range = createRef()
 
@@ -35,8 +39,28 @@ class RangeSlider extends PureComponent {
     this.lastValueProp = []
   }
 
+  initiateInputRange (index) {
+    const inputElement = document.createElement('input')
+    inputElement.type = 'range'
+    inputElement.min = this.options.min
+    inputElement.max = this.options.max
+    inputElement.step = this.options.step
+    inputElement.value = this.props.value ? this.options.value[index] : this.options.defaultValue[index]
+    return inputElement
+  }
+
+  updateInputRange (index) {
+    this.input[index].min = this.options.min
+    this.input[index].max = this.options.max
+    this.input[index].step = this.options.step
+    this.input[index].value = this.props.value ? this.options.value[index] : (index === 1 ? this.value.max : this.value.min)
+  }
+
   componentDidMount () {
     if (!this.isComponentMounted) {
+      // input[type="range"] elements for syncing values
+      this.input = [this.initiateInputRange(0), this.initiateInputRange(1)]
+
       this.value = this.setMinMaxProps()
 
       // Thumb indexes for min and max values
@@ -110,6 +134,8 @@ class RangeSlider extends PureComponent {
   }
 
   componentDidUpdate () {
+    this.updateInputRange(0)
+    this.updateInputRange(1)
     this.reset()
   }
 
@@ -223,13 +249,13 @@ class RangeSlider extends PureComponent {
   setValue (newValue, forceSet = false, callback = true) {
     // Current value as set in the input elements
     // which could change while changing min, max and step values
-    const currentValue = this.setMinMaxProps(this.input[0].current.value, this.input[1].current.value)
+    const currentValue = this.setMinMaxProps(this.input[0].value, this.input[1].value)
 
     // var value is synced with the values set in the input elements if no newValue is passed
     newValue = newValue || currentValue
 
-    this.input[this.index.min].current.value = newValue.min
-    this.input[this.index.max].current.value = (this.thumbDrag || forceSet) ? newValue.max : (newValue.min + this.rangeWidth)
+    this.input[this.index.min].value = newValue.min
+    this.input[this.index.max].value = (this.thumbDrag || forceSet) ? newValue.max : (newValue.min + this.rangeWidth)
     this.syncValues()
 
     // Check if the thumbs cross each other
@@ -243,6 +269,10 @@ class RangeSlider extends PureComponent {
       this.removeNodeAttribute(this.thumb[this.index.max].current, DATA_LOWER)
       this.setNodeAttribute(this.thumb[this.index.min].current, DATA_LOWER)
       this.setNodeAttribute(this.thumb[this.index.max].current, DATA_UPPER)
+      this.setNodeAttribute(this.thumb[this.index.min].current, ARIA_LABEL, this.props?.ariaLabel?.[0])
+      this.setNodeAttribute(this.thumb[this.index.max].current, ARIA_LABEL, this.props?.ariaLabel?.[1])
+      this.setNodeAttribute(this.thumb[this.index.min].current, ARIA_LABELLEDBY, this.props?.ariaLabelledBy?.[0])
+      this.setNodeAttribute(this.thumb[this.index.max].current, ARIA_LABELLEDBY, this.props?.ariaLabelledBy?.[1])
 
       // Switch thumb drag labels
       if (this.thumbDrag) { this.thumbDrag = this.thumbDrag === MIN ? MAX : MIN }
@@ -255,7 +285,7 @@ class RangeSlider extends PureComponent {
     let valueSet = false
 
     const currentValues = [currentValue.min, currentValue.max].sort((a, b) => a - b)
-    const elementValues = [this.input[0].current.value, this.input[1].current.value].sort((a, b) => a - b)
+    const elementValues = [this.input[0].value, this.input[1].value].sort((a, b) => a - b)
 
     if (currentValues[0] !== elementValues[0] || forceSet) { valueSet = true }
     if (currentValues[1] !== elementValues[1] || forceSet) { valueSet = true }
@@ -277,7 +307,7 @@ class RangeSlider extends PureComponent {
   // Sync var value with the input elements
   syncValues () {
     this.iterateMinMaxProps(_ => {
-      this.value[_] = +this.input[this.index[_]].current.value
+      this.value[_] = +this.input[this.index[_]].value
     })
   }
 
@@ -354,8 +384,8 @@ class RangeSlider extends PureComponent {
     this.options[limit] = m
     this.safeMinMaxValues()
     this.iterateMinMaxProps(_ => {
-      this.input[0].current[_] = this.options[_]
-      this.input[1].current[_] = this.options[_]
+      this.input[0][_] = this.options[_]
+      this.input[1][_] = this.options[_]
     })
     this.maxRangeWidth = this.options.max - this.options.min
     this.setValue('', true)
@@ -502,8 +532,8 @@ class RangeSlider extends PureComponent {
   }
 
   actualStepValue () {
-    const step = float(this.input[0].current.step)
-    return this.input[0].current.step === ANY ? ANY : ((step === 0 || isNaN(step)) ? 1 : step)
+    const step = float(this.input[0].step)
+    return this.input[0].step === ANY ? ANY : ((step === 0 || isNaN(step)) ? 1 : step)
   }
 
   // Step value (up or down) using arrow keys
@@ -549,10 +579,8 @@ class RangeSlider extends PureComponent {
 
     return (
       <div data-testid='element' id={this.props.id} ref={this.element} className={clsx('range-slider', this.props.className)}>
-        <input ref={this.input[0]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[0] : (this.isComponentMounted ? this.value.min : this.options.defaultValue[0])} onChange={() => {}} disabled />
-        <input ref={this.input[1]} type='range' min={this.options.min} max={this.options.max} step={this.options.step} value={this.props.value ? this.options.value[1] : (this.isComponentMounted ? this.value.max : this.options.defaultValue[1])} onChange={() => {}} disabled />
-        <div ref={this.thumb[0]} role='slider' className='range-slider__thumb' data-lower />
-        <div ref={this.thumb[1]} role='slider' className='range-slider__thumb' data-upper />
+        <div ref={this.thumb[0]} role='slider' className='range-slider__thumb' data-lower aria-label={this.props?.ariaLabel?.[0]} aria-labelledby={this.props?.ariaLabelledBy?.[0]} />
+        <div ref={this.thumb[1]} role='slider' className='range-slider__thumb' data-upper aria-label={this.props?.ariaLabel?.[1]} aria-labelledby={this.props?.ariaLabelledBy?.[1]} />
         <div ref={this.range} className='range-slider__range' />
       </div>
     )

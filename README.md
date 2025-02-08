@@ -155,6 +155,18 @@ export default function () {
     <td>horizontal</td>
     <td>String that specifies the axis along which the user interaction is to be registered. By default, the range slider element registers the user interaction along the X-axis. It takes two different values: <code>horizontal</code> and <code>vertical</code>.</td>
 </tr>
+<tr>
+    <td><code>ariaLabel</code></td>
+    <td>string[]</td>
+    <td>-</td>
+    <td>Array of two strings that set the <a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label"><code>aria-label</code></a> attribute on the lower and upper thumbs respectively.</td>
+</tr>
+<tr>
+    <td><code>ariaLabelledBy</code></td>
+    <td>string[]</td>
+    <td>-</td>
+    <td>Array of two strings that set the <a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-labelledby"><code>aria-labelledby</code></a> attribute on the lower and upper thumbs respectively.</td>
+</tr>
 </table>
 
 
