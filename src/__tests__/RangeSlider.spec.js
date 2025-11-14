@@ -18,7 +18,6 @@ describe('RangeSlider specs', () => {
     render(<RangeSlider />)
     const element = screen.queryAllByTestId('element')
     const thumbs = element[0].querySelectorAll('.range-slider__thumb')
-    const range = element[0].querySelectorAll('.range-slider__range')
     
     Array.from(thumbs).forEach(t => {
       expect(t.getAttribute('aria-valuemin')).toEqual('0')
@@ -40,5 +39,15 @@ describe('RangeSlider specs', () => {
     })
     expect(thumbs[0].getAttribute('aria-valuenow')).toEqual('10')
     expect(thumbs[1].getAttribute('aria-valuenow')).toEqual('30')
+  })
+
+  it('should expose API methods via ref', () => {
+    const ref = React.createRef()
+    render(<RangeSlider ref={ref} />)
+    expect(ref.current).toBeDefined()
+    expect(ref.current.element).toBeInstanceOf(HTMLDivElement)
+    expect(ref.current.range).toBeInstanceOf(HTMLDivElement)
+    expect(ref.current.thumb.lower).toBeInstanceOf(HTMLDivElement)
+    expect(ref.current.thumb.upper).toBeInstanceOf(HTMLDivElement)
   })
 })

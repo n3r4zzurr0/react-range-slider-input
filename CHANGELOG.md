@@ -1,3 +1,18 @@
+### v.3.3.x
+Added public ref API. 
+The component now exposes DOM elements via `ref.current`:
+
+```ts
+interface ReactRangeSliderInputRef {
+  element: HTMLDivElement;
+  range: HTMLDivElement;
+  thumb: {
+    lower: HTMLDivElement;
+    upper: HTMLDivElement;
+  };
+}
+```
+
 ### v.3.2.x
 New props: `ariaLabel` and `ariaLabelledBy`
 

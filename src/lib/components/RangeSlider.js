@@ -23,9 +23,9 @@ const DATA_DISABLED = 'data-disabled'
 const ARIA_LABEL = 'aria-label'
 const ARIA_LABELLEDBY = 'aria-labelledby'
 
-class RangeSlider extends PureComponent {
-  constructor () {
-    super()
+class RangeSliderInner extends PureComponent {
+  constructor (props) {
+    super(props)
 
     this.element = createRef()
     this.input = []
@@ -37,6 +37,23 @@ class RangeSlider extends PureComponent {
     this.externalInput = false
     this.isComponentMounted = false
     this.lastValueProp = []
+  }
+
+  getApi () {
+    return {
+      element: this.element.current,
+      range: this.range.current,
+      thumb: {
+        lower: this.thumb[this.index.min].current,
+        upper: this.thumb[this.index.max].current
+      }
+    }
+  }
+
+  updateRef () {
+    if (this.props.forwardedRef) {
+      this.props.forwardedRef.current = this.getApi()
+    }
   }
 
   initiateInputRange (index) {
@@ -129,6 +146,8 @@ class RangeSlider extends PureComponent {
       this.addNodeEventListener(document, 'pointerup', this.pointerUpEvent)
       this.addNodeEventListener(window, 'resize', this.resizeEvent)
 
+      this.updateRef()
+
       this.isComponentMounted = true
     }
   }
@@ -137,6 +156,7 @@ class RangeSlider extends PureComponent {
     this.updateInputRange(0)
     this.updateInputRange(1)
     this.reset()
+    this.updateRef()
   }
 
   componentWillUnmount () {
@@ -585,6 +605,6 @@ class RangeSlider extends PureComponent {
       </div>
     )
   }
-};
+}
 
-export default RangeSlider
+export default RangeSliderInner

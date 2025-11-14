@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { ForwardRefExoticComponent, RefAttributes } from 'react';
 
 export type Orientation = "horizontal" | "vertical";
 export type Step = number | "any";
@@ -106,6 +106,17 @@ export interface ReactRangeSliderInputProps {
   ariaLabelledBy?: [string, string];
 }
 
-const ReactRangeSliderInput: FC<ReactRangeSliderInputProps>;
+export interface ReactRangeSliderInputRef {
+  element: HTMLDivElement;
+  range: HTMLDivElement;
+  thumb: {
+    lower: HTMLDivElement;
+    upper: HTMLDivElement;
+  };
+}
+
+declare const ReactRangeSliderInput: ForwardRefExoticComponent<
+  ReactRangeSliderInputProps & RefAttributes<ReactRangeSliderInputRef>
+>;
 
 export default ReactRangeSliderInput;

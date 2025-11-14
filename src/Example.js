@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import RangeSlider from './lib/index.js'
 import './lib/style.css'
 import './Example.css'
@@ -11,10 +11,21 @@ export default () => {
   const [max, setMax] = useState(100)
   const [step, setStep] = useState('any')
   const [value, setValue] = useState()
+  const [value2, setValue2] = useState([30, 60])
   const [orientation, setOrientation] = useState('horizontal')
   const [disabled, setDisabled] = useState(false)
   const [thumbsDisabled, setThumbsDisabled] = useState([false, false])
   const [rangeSlideDisabled, setRangeSlideDisabled] = useState(false)
+
+  const ref = useRef()
+
+  useEffect(() => {
+    console.log(ref.current)
+  }, [value])
+
+  useEffect(() => {
+    console.log(value2)
+  }, [value2])
 
   return (
     <div className='container'>
@@ -46,6 +57,7 @@ export default () => {
       <button onClick={() => { setClasses(classes === 'styled' ? '' : 'styled') }}>toggle class</button>
       <RangeSlider
         id='range-slider'
+        ref={ref}
         className={classes}
         min={min}
         max={max}
@@ -58,7 +70,7 @@ export default () => {
         thumbsDisabled={thumbsDisabled}
         rangeSlideDisabled={rangeSlideDisabled}
       />
-      {toggleSecond && <RangeSlider />}
+      {toggleSecond && <RangeSlider className='small' value={value2} onInput={setValue2} />}
     </div>
   )
 }

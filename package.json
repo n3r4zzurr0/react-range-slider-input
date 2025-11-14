@@ -1,6 +1,6 @@
 {
   "name": "react-range-slider-input",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "private": false,
   "description": "React component wrapper for range-slider-input",
   "author": "Utkarsh Verma",

@@ -20,6 +20,9 @@ body {
 .container button:hover {
   background-color: #444;
 }
+.small {
+  width: 600px;
+}
 .range-slider {
   margin: 60px auto 0;
 }
