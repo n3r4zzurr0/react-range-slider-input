@@ -61,9 +61,7 @@ export default function () {
 </tr>
 <tr>
     <td><code>ref</code></td>
-    <td>
-        <code>ReactRangeSliderInputRef</code>
-    </td>
+    <td><a href="#refobject"><code>RefObject</code></a></td>
     <td>null</td>
     <td>Provides access to the slider’s DOM elements (<code>element</code>, <code>range</code>, <code>thumb.lower</code>, <code>thumb.upper</code>).</td>
 </tr>
@@ -177,6 +175,19 @@ export default function () {
 </tr>
 </table>
 
+### RefObject
+<code>RefObject</code> resolves to:
+
+```ts
+interface ReactRangeSliderInputRef {
+  element: HTMLDivElement;
+  range: HTMLDivElement;
+  thumb: {
+    lower: HTMLDivElement;
+    upper: HTMLDivElement;
+  };
+}
+```
 
 ## Elements
 
