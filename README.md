@@ -62,11 +62,9 @@ export default function () {
 <tr>
     <td><code>ref</code></td>
     <td>
-        <code>
-React.Ref&lt;
+        <code>React.Ref&lt;
 &nbsp;&nbsp;ReactRangeSliderInputRef
-&gt;
-        </code>
+&gt;</code>
     </td>
     <td>null</td>
     <td>Provides access to the slider’s DOM elements (<code>element</code>, <code>range</code>, <code>thumb.lower</code>, <code>thumb.upper</code>).</td>
