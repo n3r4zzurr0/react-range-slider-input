@@ -182,7 +182,6 @@ class RangeSliderInner extends PureComponent {
     this.updateDisabledState()
     this.updateThumbsDisabledState()
     this.updateTabIndexes()
-    if (first) { this.sliderValue = this.value }
   }
 
   isNumber (n) {
@@ -299,8 +298,6 @@ class RangeSliderInner extends PureComponent {
 
       this.syncValues()
     }
-
-    this.sliderValue = forceSet ? this.sliderValue : newValue
 
     let valueSet = false
 
@@ -489,6 +486,7 @@ class RangeSliderInner extends PureComponent {
     this.syncThumbDimensions()
     this.setNodeAttribute(node, DATA_ACTIVE)
     this.startPos = this.currentPosition(e, node)
+    this.sliderValue = { ...this.value }
     this.isDragging = true
   }
 
@@ -521,6 +519,9 @@ class RangeSliderInner extends PureComponent {
 
       if (!this.thumbDrag || this.thumbDrag === MIN) { min = this.thumbDrag ? lastPos : (this.sliderValue.min + delta) }
       if (!this.thumbDrag || this.thumbDrag === MAX) { max = this.thumbDrag ? lastPos : (this.sliderValue.max + delta) }
+
+      this.sliderValue.min += delta
+      this.sliderValue.max += delta
 
       if (min >= lower && min <= upper && max >= lower && max <= upper) {
         this.setValue({ min, max })
