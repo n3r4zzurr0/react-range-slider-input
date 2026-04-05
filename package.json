@@ -1,6 +1,6 @@
 {
   "name": "react-range-slider-input",
-  "version": "3.3.3",
+  "version": "3.3.4",
   "private": false,
   "description": "React component wrapper for range-slider-input",
   "author": "Utkarsh Verma",
@@ -16,12 +16,20 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./types/index.d.ts"
+    }
+  },
   "files": [
     "dist/",
     "types/",
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "license": "MIT",
   "homepage": "https://n3r4zzurr0.in/range-slider-input/",
   "repository": {
@@ -44,7 +52,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "NODE_ENV=production babel src/lib --out-dir dist --copy-files",
+    "build": "cross-env NODE_ENV=production babel src/lib --out-dir dist --copy-files",
     "eject": "react-scripts eject",
     "test": "standard && jest"
   },
@@ -60,12 +68,17 @@
       "last 1 safari version"
     ]
   },
+  "peerDependencies": {
+    "react": ">=17 || >=18",
+    "react-dom": ">=17 || >=18"
+  },
   "devDependencies": {
     "@babel/cli": "^7.17.10",
     "@babel/core": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.2.0",
+    "cross-env": "^7.0.3",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-scripts": "^5.0.1",
